@@ -61,38 +61,44 @@ const Chats = () => {
     }, [])
   );
 
-  // Render each match item with a profile picture and name
-  const renderMatch = ({ item }) => (
-    <TouchableOpacity
-      style={styles.matchItem}
-      onPress={() => {
-        if (item.matchId && item.name && item.photos && item.photos.length > 0) {
-  
-          const encodedPhotoUrl = encodeURIComponent(item.photos[0]);  // Ensure the URL is encoded
-  
-          console.log('Encoded Photo URL:', encodedPhotoUrl); 
-  
-          router.push({
-            pathname: '/chat',
-            params: {
-              matchId: item.matchId,  // Now matchId should be correctly passed
-              name: item.name,
-              photo: encodedPhotoUrl,  // Pass the URL-encoded photo
-            },
-          });
-  
-        } else {
-          console.error('Missing parameters:', { matchId: item.matchId, name: item.name, photos: item.photos });
-        }
-      }}
-    >
-      <Image
-        source={{ uri: item.photos[0] }}  // Assuming the first photo is the profile photo
-        style={styles.profileImage}
-      />
+  // Render each match item with a profile picture, name, and message preview
+const renderMatch = ({ item }) => (
+  <TouchableOpacity
+    style={styles.matchItem}
+    onPress={() => {
+      if (item.matchId && item.name && item.photos && item.photos.length > 0) {
+
+        const encodedPhotoUrl = encodeURIComponent(item.photos[0]);  // Ensure the URL is encoded
+
+        console.log('Encoded Photo URL:', encodedPhotoUrl); 
+
+        router.push({
+          pathname: '/chat',
+          params: {
+            matchId: item.matchId,  // Now matchId should be correctly passed
+            name: item.name,
+            photo: encodedPhotoUrl,  // Pass the URL-encoded photo
+          },
+        });
+
+      } else {
+        console.error('Missing parameters:', { matchId: item.matchId, name: item.name, photos: item.photos });
+      }
+    }}
+  >
+    <Image
+      source={{ uri: item.photos[0] }}  // Assuming the first photo is the profile photo
+      style={styles.profileImage}
+    />
+    <View>
       <Text style={styles.matchName}>{item.name}</Text>
-    </TouchableOpacity>
-  );  
+      {/* Display messagePreview or "Start a conversation" */}
+      <Text style={styles.messagePreview}>
+        {item.messagePreview && item.messagePreview.trim() !== '' ? item.messagePreview : 'Start a conversation'}
+      </Text>
+    </View>
+  </TouchableOpacity>
+);  
 
   return (
     <View style={styles.container}>

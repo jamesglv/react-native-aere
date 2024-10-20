@@ -53,6 +53,9 @@ const likeProfiles = () => {
         matchId: matchId,
         users: [currentUserId, userId],
         createdAt: Timestamp.now(),  // Store the timestamp
+        lastMessage: '',
+        messagePreview: '',
+        messages: [],
       });
 
       // Navigate back to the likes page

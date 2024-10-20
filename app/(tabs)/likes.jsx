@@ -64,13 +64,19 @@ const Likes = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Likes</Text>
-      <FlatList
-        data={receivedLikes}
-        keyExtractor={(item) => item.id}
-        numColumns={2}  // Set two columns for grid layout
-        renderItem={renderLike}
-        contentContainerStyle={styles.listContent}
-      />
+      {receivedLikes.length === 0 ? (  // Check if there are no likes
+        <View style={styles.noLikesContainer}>
+          <Text style={styles.noLikesText}>No likes yet. Check back later!</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={receivedLikes}
+          keyExtractor={(item) => item.id}
+          numColumns={2}  // Set two columns for grid layout
+          renderItem={renderLike}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </View>
   );
 };
@@ -116,6 +122,16 @@ const styles = StyleSheet.create({
     color: '#fff',  // White text to stand out on the dark overlay
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  noLikesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noLikesText: {
+    fontSize: 18,
+    color: '#999',
     textAlign: 'center',
   },
 });
