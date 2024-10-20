@@ -14,14 +14,20 @@
     },
     "ios": {
       "supportsTablet": true,
-      "package": "com.harwooddigital.AERE"
+      "package": "com.harwooddigital.AERE",
+      "config": {
+        "googleMapsApiKey": "AIzaSyDG7t8dtS1t0xBDpCyzjI11dusFpmVOvJI"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.harwooddigital.AERE"
+      "package": "com.harwooddigital.AERE",
+      "config": {
+        "apiKey": "AIzaSyDG7t8dtS1t0xBDpCyzjI11dusFpmVOvJI"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

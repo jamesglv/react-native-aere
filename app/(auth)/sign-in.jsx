@@ -8,7 +8,7 @@ import { images } from '../../constants';
 import CustomButton from '../../components/CustomButton';
 // Firebase imports
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { FIREBASE_AUTH } from '../../firebaseConfig';  // Assuming firebase.js is in lib folder
+import { FIREBASE_AUTH } from '../../firebaseConfig';  // Assuming firebaseConfig.js is in the correct folder
 
 const SignIn = () => {
   const router = useRouter(); // Added router for navigation
@@ -27,10 +27,9 @@ const SignIn = () => {
 
     setIsSubmitting(true);
 
-    const auth = getAuth(app);  // Initialize Firebase Auth
     try {
       // Use Firebase sign-in method
-      await signInWithEmailAndPassword(auth, form.email, form.password);
+      await signInWithEmailAndPassword(FIREBASE_AUTH, form.email, form.password);
 
       // Navigate to home screen after successful sign-in
       router.replace('/home');

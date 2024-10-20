@@ -6,6 +6,9 @@ import { FIREBASE_DB, FIREBASE_AUTH, FIREBASE_STORAGE } from '../../firebaseConf
 import { doc, setDoc } from 'firebase/firestore';  // Firestore functions
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';  // Firebase Storage
 import * as ImagePicker from 'expo-image-picker';  // Image Picker
+import MapView, { Marker } from 'react-native-maps';  // Google Maps
+import * as Location from 'expo-location';  // Expo location services
+import uuid from 'react-native-uuid';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +34,10 @@ const onboardingPages = [
     id: '5',
     title: 'Upload Your Photos',
   },
+  {
+    id: '6',
+    title: 'Set Your Location',
+  },
 ];
 
 const Onboarding = () => {
@@ -47,6 +54,36 @@ const Onboarding = () => {
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState([]);  // Array to store selected photos (max 6)
   const [isUploading, setIsUploading] = useState(false);  // Track upload state
+  const [location, setLocation] = useState(null);  // User's selected location (latitude, longitude)
+  const [region, setRegion] = useState({
+    latitude: 37.78825,
+    longitude: -122.4324,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });  // Default region for the map
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'We need access to your location.');
+        return;
+      }
+
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
+
+      setRegion({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    })();
+  }, []);
 
   // Helper function to calculate age from birthdate
   const calculateAge = (birthDay, birthMonth, birthYear) => {
@@ -119,22 +156,26 @@ const Onboarding = () => {
   const uploadPhoto = async (uri, userId, index) => {
     try {
       console.log("Starting upload for URI:", uri);
-
+  
+      // Generate a unique, URL-safe filename using UUID
+      const uniqueId = uuid.v4();  // Generate a UUID
+      const fileName = `photo-${uniqueId}`;  // Use UUID to ensure uniqueness
+  
       const response = await fetch(uri);
       const blob = await response.blob();  // Convert to blob
       console.log("Blob created successfully");
-
+  
       // Prepare the Firebase Storage reference
-      const photoRef = ref(FIREBASE_STORAGE, `users/${userId}/photo-${index}`);
-      
+      const photoRef = ref(FIREBASE_STORAGE, `users/${userId}/${fileName}`);
+  
       // Upload the blob to Firebase Storage
       await uploadBytes(photoRef, blob);
-      
+  
       // Retrieve the download URL
       const downloadUrl = await getDownloadURL(photoRef);
       console.log("Download URL:", downloadUrl);
-      
-      return downloadUrl;
+  
+      return downloadUrl;  // Return the URL-safe download URL
     } catch (error) {
       console.error("Error uploading photo:", error);
       throw error;
@@ -171,6 +212,12 @@ const Onboarding = () => {
         gender: gender,
         bio: bio,
         photos: photoUrls,  // Save photo URLs
+        location: location,  // Save user location
+        likedUsers: [],
+        declinedUsers: [],
+        receivedLikes: [],
+        receivedDeclines: [],
+        matches: [],
         onboardingCompleted: true,
       }, { merge: true });  // Merge to avoid overwriting existing fields
 
@@ -290,6 +337,24 @@ const Onboarding = () => {
           </ScrollView>
         </View>
       );
+    } else if (item.id === '6') {
+        return (
+            <View style={[styles.page, { width }]}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.subtitle}>Drag the map to set your location</Text>
+              <MapView
+                style={{ width: '100%', height: 300 }} //styles.map
+                region={region}
+                onRegionChangeComplete={setRegion}
+              >
+                <Marker
+                  coordinate={{ latitude: region.latitude, longitude: region.longitude }}
+                  draggable
+                  onDragEnd={(e) => setLocation(e.nativeEvent.coordinate)}
+                />
+              </MapView>
+            </View>
+          );
     }
   };
 
@@ -393,7 +458,7 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
-    width: 100,
+    width: 110,
     color: '#fff',  // Text color inside picker
   },
   pickerItemStyle: {
