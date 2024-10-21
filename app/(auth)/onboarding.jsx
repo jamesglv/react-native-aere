@@ -218,6 +218,9 @@ const Onboarding = () => {
         receivedLikes: [],
         receivedDeclines: [],
         matches: [],
+        privatePhotos: [],
+        privateRequests: [],
+        privateAccepted: [],
         onboardingCompleted: true,
       }, { merge: true });  // Merge to avoid overwriting existing fields
 

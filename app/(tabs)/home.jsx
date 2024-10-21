@@ -127,8 +127,13 @@ const Home = () => {
 
   const toggleGender = (gender) => {
     if (selectedGenders.includes(gender)) {
-      // Remove gender if already selected
-      setSelectedGenders(selectedGenders.filter((g) => g !== gender));
+      // Prevent deselecting if it's the last selected gender
+      if (selectedGenders.length === 1) {
+        //Alert.alert('Error', 'At least one gender must be selected.');
+      } else {
+        // Remove gender if already selected
+        setSelectedGenders(selectedGenders.filter((g) => g !== gender));
+      }
     } else {
       // Add gender to selected list
       setSelectedGenders([...selectedGenders, gender]);
