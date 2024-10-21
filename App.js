@@ -1,3 +1,4 @@
+
 // import { createStackNavigator } from '@react-navigation/stack';
 // import { NavigationContainer } from '@react-navigation/native';
 // import Profiles from './components/Profiles';  // Assuming Profile is in the components folder

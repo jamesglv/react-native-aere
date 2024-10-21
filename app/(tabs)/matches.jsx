@@ -29,6 +29,7 @@ const Chats = () => {
             if (matchDocSnapshot.exists()) {
               const matchData = matchDocSnapshot.data();
               const usersInMatch = matchData.users || [];
+              const messagePreview = matchData.messagePreview || '';  // Get messagePreview or empty string
   
               // Find the user in the match that is not the logged-in user
               const otherUserId = usersInMatch.find((id) => id !== currentUserId);
@@ -39,7 +40,11 @@ const Chats = () => {
   
                 if (otherUserSnapshot.exists()) {
                   // Return the other user's profile with the matchId
-                  return { id: otherUserId, matchId, ...otherUserSnapshot.data() };
+                  return { 
+                    id: otherUserId, 
+                    matchId, 
+                    messagePreview,  // Include messagePreview in the returned profile
+                    ...otherUserSnapshot.data() };
                 }
               }
             }

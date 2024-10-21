@@ -4,9 +4,11 @@ import { FIREBASE_AUTH, FIREBASE_DB } from '../../firebaseConfig'; // Firestore 
 import { updateDoc, doc, getDoc } from 'firebase/firestore'; // Firestore functions
 import { signOut } from 'firebase/auth'; // Firebase sign-out function
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient from expo-linear-gradient
+import { useRouter } from 'expo-router';  // Import useRouter from expo-router
 
 const Profile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
+  const router = useRouter(); // Use router for navigation
 
   // State for user profile fields
   const [name, setName] = useState('');
@@ -60,14 +62,13 @@ const Profile = () => {
     }
   };
 
-  // Function to handle user logout
+  // Function to handle the logout
   const handleLogout = async () => {
     try {
       await signOut(FIREBASE_AUTH);
-      Alert.alert('Logged Out', 'You have been logged out successfully.');
+      router.replace('/sign-in');  // Navigate to sign-in screen after logout
     } catch (error) {
-      console.error('Error signing out:', error);
-      Alert.alert('Error', 'Failed to log out. Please try again later.');
+      Alert.alert('Error', error.message);
     }
   };
 

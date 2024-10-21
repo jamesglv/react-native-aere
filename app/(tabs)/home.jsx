@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, FlatList, Image, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';  // Import Firestore config
 import { getDocs, collection, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';  // Firestore functions
-import { signOut } from 'firebase/auth';  // Firebase signOut
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';  // Icon library for settings button
+import { LinearGradient } from 'expo-linear-gradient';
+import RangeSlider from 'react-native-range-slider-expo';  // Import the range slider
+import Slider from '@react-native-community/slider'; 
+import haversine from 'haversine-distance';  // Import haversine formula function
 
 const { width, height } = Dimensions.get('window');  // Get screen dimensions
 
 const Home = () => {
   const [profiles, setProfiles] = useState([]);  // Store user profiles
   const [refreshing, setRefreshing] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false); // State to control the filter modal visibility
+  const [minAge, setMinAge] = useState(18);  // Minimum age
+  const [maxAge, setMaxAge] = useState(60);  // Maximum age
+  const [maxDistance, setMaxDistance] = useState(50);  // Maximum distance (in km)
+  const [selectedGenders, setSelectedGenders] = useState([]);  // Store selected gender filters
+  const [currentUserLocation, setCurrentUserLocation] = useState(null);  // Store the current user's location
+  const [filteredProfiles, setFilteredProfiles] = useState([]);  // Store filtered profiles
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState(null);  // Store the user ID
   const [currentUserData, setCurrentUserData] = useState({ likedUsers: [], declinedUsers: [] });  // Track current user data
@@ -25,22 +36,18 @@ const Home = () => {
     }
   }, []);
 
-  // Fetch the current user's data (likedUsers, declinedUsers)
-  const fetchCurrentUser = async () => {
+  // Function to handle the logout
+  const handleLogout = async () => {
     try {
-      const userRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        // Ensure likedUsers and declinedUsers are arrays, initialize them if missing
-        const userData = userSnap.data();
-        setCurrentUserData({
-          likedUsers: userData.likedUsers || [],  // Initialize to empty array if missing
-          declinedUsers: userData.declinedUsers || []  // Initialize to empty array if missing
-        });
-      }
+      await signOut(FIREBASE_AUTH);
+      router.replace('/sign-in');  // Navigate to sign-in screen after logout
     } catch (error) {
-      console.error('Error fetching current user data:', error);
+      Alert.alert('Error', error.message);
     }
+  };
+
+  const toggleFilterModal = () => {
+    setFilterModalVisible(!filterModalVisible); // Toggle the visibility of the filter modal
   };
 
   // Fetch profiles from Firestore
@@ -51,9 +58,7 @@ const Home = () => {
         const data = doc.data();
         return { id: doc.id, ...data };
       }).filter(profile => {
-        // Filter out the logged-in user's profile
         return profile.id !== currentUserId
-          // Filter out profiles that the user has already liked or declined
           && !currentUserData.likedUsers.includes(profile.id)
           && !currentUserData.declinedUsers.includes(profile.id);
       });
@@ -65,11 +70,27 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    if (currentUserId) {
-      fetchCurrentUser();  // Fetch current user's liked and declined users
-    }
-  }, [currentUserId]);
+  // Filter profiles based on age, distance, and gender
+  const filterProfiles = () => {
+    const filtered = profiles.filter(profile => {
+      // Filter by age
+      const isWithinAgeRange = profile.age >= minAge && profile.age <= maxAge;
+
+      // Filter by distance (use haversine formula)
+      let isWithinDistance = true;
+      if (currentUserLocation && profile.location) {
+        const distance = haversine(currentUserLocation, profile.location) / 1000; // Convert meters to km
+        isWithinDistance = distance <= maxDistance;
+      }
+
+      // Filter by gender
+      const isGenderSelected = selectedGenders.length === 0 || selectedGenders.includes(profile.gender);
+
+      return isWithinAgeRange && isWithinDistance && isGenderSelected;
+    });
+
+    setFilteredProfiles(filtered);
+  };
 
   useEffect(() => {
     if (currentUserId) {
@@ -77,72 +98,40 @@ const Home = () => {
     }
   }, [currentUserId, currentUserData]);
 
+  // Update filter profiles when sliders or gender filters change
+  useEffect(() => {
+    if (profiles.length > 0) {
+      filterProfiles();
+    }
+  }, [minAge, maxAge, maxDistance, selectedGenders, profiles]);
+
+  useEffect(() => {
+    // Fetch current user location (this would be retrieved from the user's profile data)
+    // Assuming we have latitude and longitude stored in the user profile
+    const fetchUserLocation = async () => {
+      const userDoc = await getDoc(doc(FIREBASE_DB, 'users', currentUserId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setCurrentUserLocation(userData.location); // Assuming location is stored as { latitude, longitude }
+      }
+    };
+
+    fetchUserLocation();
+  }, [currentUserId]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchProfiles();
     setRefreshing(false);
   };
 
-  // Function to handle a 'Like' action
-  const handleLike = async (targetUserId) => {
-    try {
-      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
-
-      // Update the current user's list of liked users
-      await updateDoc(currentUserRef, {
-        likedUsers: arrayUnion(targetUserId)  // Add target user to likedUsers array
-      });
-
-      // Update the target user's list of received likes
-      await updateDoc(targetUserRef, {
-        receivedLikes: arrayUnion(currentUserId)  // Add current user to receivedLikes array
-      });
-
-      // Remove the liked user from the visible profile stack
-      setProfiles(profiles.filter(profile => profile.id !== targetUserId));
-
-      Alert.alert('Success', `You liked user: ${targetUserId}`);
-    } catch (error) {
-      console.error('Error liking user:', error);
-      Alert.alert('Error', 'Failed to like user');
-    }
-  };
-
-  // Function to handle a 'Decline' action
-  const handleDecline = async (targetUserId) => {
-    try {
-      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
-
-      // Update the current user's list of declined users
-      await updateDoc(currentUserRef, {
-        declinedUsers: arrayUnion(targetUserId)  // Add target user to declinedUsers array
-      });
-
-      // Update the target user's list of received declines
-      await updateDoc(targetUserRef, {
-        receivedDeclines: arrayUnion(currentUserId)  // Add current user to receivedDeclines array
-      });
-
-      // Remove the declined user from the visible profile stack
-      setProfiles(profiles.filter(profile => profile.id !== targetUserId));
-
-      Alert.alert('Success', `You declined user: ${targetUserId}`);
-    } catch (error) {
-      console.error('Error declining user:', error);
-      Alert.alert('Error', 'Failed to decline user');
-    }
-  };
-
-  // Function to handle the logout
-  const handleLogout = async () => {
-    try {
-      await signOut(FIREBASE_AUTH);
-      Alert.alert('Success', 'You have logged out successfully.');
-      router.replace('/sign-up');  // Navigate to sign-up screen after logout
-    } catch (error) {
-      Alert.alert('Error', error.message);
+  const toggleGender = (gender) => {
+    if (selectedGenders.includes(gender)) {
+      // Remove gender if already selected
+      setSelectedGenders(selectedGenders.filter((g) => g !== gender));
+    } else {
+      // Add gender to selected list
+      setSelectedGenders([...selectedGenders, gender]);
     }
   };
 
@@ -173,15 +162,20 @@ const Home = () => {
       <StatusBar hidden={true} />
 
       {/* Main screen content */}
-      <SafeAreaView style={styles.container} edges={['left', 'right']}>
-        {/* Overlay Log Out button on top of the image */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>    
 
-        {/* Profile Carousel */}
+        {/* If there are no profiles, show this view */}
+        {filteredProfiles.length === 0 ? (
+          <View style={styles.noProfilesContainer}>
+            <Text style={styles.noProfilesText}>There are no profiles available. Adjust the filters to find more matches.</Text>
+            <TouchableOpacity style={styles.adjustFiltersButton} onPress={toggleFilterModal}>
+              <Text style={styles.adjustFiltersButtonText}>Adjust Filters</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+        // Profile Carousel
         <FlatList
-          data={profiles}
+          data={filteredProfiles}
           horizontal
           keyExtractor={(item) => item.id}
           renderItem={renderProfileCard}
@@ -192,6 +186,99 @@ const Home = () => {
           }
           contentContainerStyle={styles.carousel}
         />
+        )}
+
+        {/* Settings Button */}
+        <TouchableOpacity style={styles.settingsButton} onPress={toggleFilterModal}>
+          <Ionicons name="settings-outline" size={30} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Filter Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={filterModalVisible}
+          onRequestClose={toggleFilterModal}
+        >
+          <View style={styles.modalOverlay}>
+            <LinearGradient
+              colors={['transparent','rgba(0,0,0,1)', 'rgba(0,0,0,1)']}  // Gradient from black to transparent
+              style={StyleSheet.absoluteFillObject}  // Fill the overlay completely
+            />
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Filter by Age</Text>
+
+              {/* Age Range Slider */}
+              <RangeSlider
+                min={18}
+                max={60}
+                fromValueOnChange={setMinAge}
+                toValueOnChange={setMaxAge}
+                initialFromValue={minAge}
+                initialToValue={maxAge}
+                styleSize="medium"
+                fromKnobColor="#007bff"
+                toKnobColor="#007bff"
+                inRangeBarColor="#007bff"
+                outOfRangeBarColor="#ddd"
+              />
+              <View style={styles.ageLabelContainer}>
+                <Text style={styles.ageLabel}>Min Age: {minAge}</Text>
+                <Text style={styles.ageLabel}>Max Age: {maxAge}</Text>
+              </View>
+
+              {/* Distance Slider */}
+              <Slider
+                style={{ width: '90%', height: 60 }}  // Set the width and height of the slider
+                minimumValue={1}
+                maximumValue={500}
+                value={maxDistance}
+                onValueChange={setMaxDistance}
+                minimumTrackTintColor="#007bff"
+                maximumTrackTintColor="#ddd"
+                thumbTintColor="#007bff"
+              />
+              <View style={styles.ageLabelContainer}>
+                <Text style={styles.ageLabel}>Max Distance: {Math.round(maxDistance)} km</Text>
+              </View>
+
+              {/* Gender Checkboxes */}
+              <Text style={styles.modalTitle}>Filter by Gender</Text>
+              <View style={styles.checkboxContainer}>
+                <TouchableOpacity style={styles.checkbox} onPress={() => toggleGender('Male')}>
+                  <Ionicons
+                    name={selectedGenders.includes('Male') ? 'checkbox' : 'square-outline'}
+                    size={24}
+                    color={selectedGenders.includes('Male') ? '#007bff' : '#ddd'}
+                  />
+                  <Text style={styles.checkboxLabel}>Male</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.checkbox} onPress={() => toggleGender('Female')}>
+                  <Ionicons
+                    name={selectedGenders.includes('Female') ? 'checkbox' : 'square-outline'}
+                    size={24}
+                    color={selectedGenders.includes('Female') ? '#007bff' : '#ddd'}
+                  />
+                  <Text style={styles.checkboxLabel}>Female</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.checkbox} onPress={() => toggleGender('Non-Binary')}>
+                  <Ionicons
+                    name={selectedGenders.includes('Non-Binary') ? 'checkbox' : 'square-outline'}
+                    size={24}
+                    color={selectedGenders.includes('Non-Binary') ? '#007bff' : '#ddd'}
+                  />
+                  <Text style={styles.checkboxLabel}>Non-Binary</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity onPress={toggleFilterModal}>
+                <Text style={styles.closeModalText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </>
   );
@@ -203,53 +290,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1c1c1e',
   },
-  // Style for the log-out button overlay
-  logoutButton: {
-    position: 'absolute',  // Overlay on top of the image
-    top: 40,  // Adjust this based on your design, this example is for margin from the top of the screen
-    left: 20,  // Adjust this to move the button left or right
-    zIndex: 2,  // Ensure the log-out button is above other elements
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
+  noProfilesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',  // White background for no profiles state
   },
-  logoutText: {
-    color: '#1c1c1e',
+  noProfilesText: {
     fontSize: 18,
-    fontWeight: '600',
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: 20,
+  },
+  adjustFiltersButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+  },
+  adjustFiltersButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   carousel: {
     alignItems: 'center',
   },
   card: {
-    width: width,  // Full width of the screen
-    height: height,  // Full height of the screen
+    width: width,
+    height: height,
     backgroundColor: '#fff',
-    justifyContent: 'flex-start',  // Align content at the top of the white space
+    justifyContent: 'flex-start',
   },
   profileImage: {
     position: 'absolute',
-    top: 0,  // Pin to the top of the screen
-    width: '100%',  // Full width of the screen
-    height: height * 0.5,  // Take 50% of the screen height
-    resizeMode: 'cover',  // Ensure the image covers the space while maintaining aspect ratio
+    top: 0,
+    width: '100%',
+    height: height * 0.5,
+    resizeMode: 'cover',
   },
   textContainer: {
-    marginTop: height * 0.5,  // Start text container below the image
-    paddingHorizontal: 20,  // Add some padding for the text
-    paddingTop: 20,  // Extra padding to create spacing at the top
+    marginTop: height * 0.5,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   name: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1c1c1e',
-    marginBottom: 10,  // Add some space below the name
+    marginBottom: 10,
   },
   bio: {
     fontSize: 16,
     color: '#1c1c1e',
-    lineHeight: 22,  // Make the bio text easier to read
+    lineHeight: 22,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -273,6 +366,64 @@ const styles = StyleSheet.create({
   declineButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 10,
+    borderRadius: 30,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',  // Align to the bottom of the screen
+  },
+  modalContent: {
+    width: '100%',
+    height: '60%',  // Adjust percentage as needed
+    backgroundColor: '#fff',
+    padding: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  closeModalText: {
+    color: '#007bff',
+    fontSize: 18,
+    marginTop: 20,
+  },
+  ageLabelContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
+    marginVertical: 10,
+  },
+  ageLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  checkboxContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  checkbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  checkboxLabel: {
+    marginLeft: 10,
+    fontSize: 18,
+    color: '#333',
   },
 });
 

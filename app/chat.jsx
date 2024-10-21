@@ -60,6 +60,7 @@ const Chat = () => {
     try {
       await updateDoc(matchDocRef, {
         messages: arrayUnion(newMessage),  // Add the new message to the messages array
+        messagePreview: messageText,
       });
 
       setMessageText('');  // Clear the text input
