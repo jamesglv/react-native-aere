@@ -61,6 +61,7 @@ const Chat = () => {
       await updateDoc(matchDocRef, {
         messages: arrayUnion(newMessage),  // Add the new message to the messages array
         messagePreview: messageText,
+        lastMessage: Timestamp.now(),
       });
 
       setMessageText('');  // Clear the text input
