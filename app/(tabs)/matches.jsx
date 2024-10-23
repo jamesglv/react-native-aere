@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image, Alert, StatusBar } from 'react-native';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';  // Firestore and Firebase Auth config
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';  // Firestore functions
 import { useRouter, useFocusEffect } from 'expo-router';  // Use expo-router for navigation and focus effect
@@ -130,6 +130,7 @@ const Chats = () => {
                   matchId: item.matchId,  // Now matchId should be correctly passed
                   name: item.name,
                   photo: encodedPhotoUrl,  // Pass the URL-encoded photo
+                  id: item.id,
                 },
               });
             } else {
@@ -175,7 +176,8 @@ const Chats = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Chats</Text>
+      <StatusBar hidden={false} />
+      <Text style={styles.title}>Matches</Text>
       {matches.length > 0 ? (
         <SwipeListView
           data={matches}
@@ -206,6 +208,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
+    paddingTop: 30,
   },
   matchItem: {
     flexDirection: 'row',  // Align image and text side by side
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
     width: '100%',  // Full width of the screen
     padding: 15,
     backgroundColor: '#fff',
-    marginBottom: 10,
+    //marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -222,9 +225,9 @@ const styles = StyleSheet.create({
     height: 80,  // Ensure fixed height for both match item and hidden item
   },
   profileImage: {
-    width: 40,  // Set the width and height of the circular image
-    height: 40,
-    borderRadius: 20,  // Make the image circular
+    width: 60,  // Set the width and height of the circular image
+    height: 60,
+    borderRadius: 30,  // Make the image circular
     marginRight: 15,  // Add space between image and text
   },
   nameContainer: {

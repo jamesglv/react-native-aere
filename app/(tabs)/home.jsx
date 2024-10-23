@@ -143,18 +143,28 @@ const Home = () => {
   // Render each profile card in the carousel
   const renderProfileCard = ({ item }) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.photos[0] }} style={styles.profileImage} />
+      {/* Display photos in a carousel */}
+      <FlatList
+        data={item.photos}  // Assuming `item.photos` is an array of image URLs
+        horizontal  // Enable horizontal scrolling
+        pagingEnabled  // Snap to individual images
+        showsHorizontalScrollIndicator={false}  // Hide scroll indicator
+        keyExtractor={(photo, index) => index.toString()}  // Use index as key
+        renderItem={({ item: photo }) => (
+          <Image source={{ uri: photo }} style={styles.profileImage} />
+        )}
+      />
       <View style={styles.textContainer}>
         <Text style={styles.name}>{item.name}, {item.age}</Text>
         <Text style={styles.bio}>{item.bio}</Text>
-
+  
         {/* Like and Decline Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.likeButton} onPress={() => handleLike(item.id)}>
-            <Text style={styles.likeButtonText}>Like</Text>
+            <Ionicons name="heart" size={30} color="black" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(item.id)}>
-            <Text style={styles.declineButtonText}>Decline</Text>
+            <Ionicons name="close" size={30} color="black" />
           </TouchableOpacity>
         </View>
       </View>
@@ -190,6 +200,8 @@ const Home = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           contentContainerStyle={styles.carousel}
+          bounces={false}  // Disable the bouncy effect on iOS when dragging down
+
         />
         )}
 
@@ -350,19 +362,37 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    position: 'absolute',
+    right: 20,  // Position buttons on the right
+    top: height / 2 - 600, // This should place the buttons at the middle of the screen
+    alignItems: 'center',  // Center the buttons horizontally
+    height: 130,  // The combined height for both buttons with padding
+    justifyContent: 'space-between',  // Add space between the two buttons
   },
   likeButton: {
-    backgroundColor: 'green',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: '#fff',
+    padding: 23,
+    marginBottom: 25,
+    borderRadius: 50,  // Circular shape
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,  // Shadow for Android
   },
   declineButton: {
-    backgroundColor: 'red',
+    backgroundColor: '#fff',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 50,  // Circular shape
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,  // Shadow for Android
   },
   likeButtonText: {
     color: '#fff',
