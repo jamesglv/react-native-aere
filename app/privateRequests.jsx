@@ -235,7 +235,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 20,
+    marginBottom: 30,
+    paddingTop: 50,
   },
   sectionTitle: {
     fontSize: 18,
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 40,
+    top: 65,
     left: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 25,

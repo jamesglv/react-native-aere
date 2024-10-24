@@ -50,7 +50,6 @@ const Home = () => {
     setFilterModalVisible(!filterModalVisible); // Toggle the visibility of the filter modal
   };
 
-  // Fetch profiles from Firestore
   const fetchProfiles = async () => {
     try {
       const profilesSnapshot = await getDocs(collection(FIREBASE_DB, 'users'));
@@ -58,39 +57,46 @@ const Home = () => {
         const data = doc.data();
         return { id: doc.id, ...data };
       }).filter(profile => {
-        return profile.id !== currentUserId
+        // Include users who are not paused or where paused field doesn't exist
+
+        const isNotPaused =  profile.paused === false || profile.paused === undefined;
+  
+        return isNotPaused && profile.id !== currentUserId
           && !currentUserData.likedUsers.includes(profile.id)
           && !currentUserData.declinedUsers.includes(profile.id);
       });
-
+  
       setProfiles(profilesData);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       Alert.alert('Error', 'Failed to load profiles');
     }
   };
+  
 
-  // Filter profiles based on age, distance, and gender
   const filterProfiles = () => {
     const filtered = profiles.filter(profile => {
+      // Ensure user is not paused
+      const isNotPaused = profile.paused === undefined || profile.paused === false;
+  
       // Filter by age
       const isWithinAgeRange = profile.age >= minAge && profile.age <= maxAge;
-
+  
       // Filter by distance (use haversine formula)
       let isWithinDistance = true;
       if (currentUserLocation && profile.location) {
         const distance = haversine(currentUserLocation, profile.location) / 1000; // Convert meters to km
         isWithinDistance = distance <= maxDistance;
       }
-
+  
       // Filter by gender
       const isGenderSelected = selectedGenders.length === 0 || selectedGenders.includes(profile.gender);
-
-      return isWithinAgeRange && isWithinDistance && isGenderSelected;
+  
+      return isNotPaused && isWithinAgeRange && isWithinDistance && isGenderSelected;
     });
-
+  
     setFilteredProfiles(filtered);
-  };
+  };  
 
   useEffect(() => {
     if (currentUserId) {
@@ -125,6 +131,58 @@ const Home = () => {
     setRefreshing(false);
   };
 
+  // Function to handle a 'Like' action
+  const handleLike = async (targetUserId) => {
+    try {
+      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
+      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+
+      // Update the current user's list of liked users
+      await updateDoc(currentUserRef, {
+        likedUsers: arrayUnion(targetUserId)  // Add target user to likedUsers array
+      });
+
+      // Update the target user's list of received likes
+      await updateDoc(targetUserRef, {
+        receivedLikes: arrayUnion(currentUserId)  // Add current user to receivedLikes array
+      });
+
+      // Remove the liked user from the visible profile stack
+      setProfiles(profiles.filter(profile => profile.id !== targetUserId));
+
+      Alert.alert('Success', `You liked user: ${targetUserId}`);
+    } catch (error) {
+      console.error('Error liking user:', error);
+      Alert.alert('Error', 'Failed to like user');
+    }
+  };
+
+  // Function to handle a 'Decline' action
+  const handleDecline = async (targetUserId) => {
+    try {
+      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
+      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+
+      // Update the current user's list of declined users
+      await updateDoc(currentUserRef, {
+        declinedUsers: arrayUnion(targetUserId)  // Add target user to declinedUsers array
+      });
+
+      // Update the target user's list of received declines
+      await updateDoc(targetUserRef, {
+        receivedDeclines: arrayUnion(currentUserId)  // Add current user to receivedDeclines array
+      });
+
+      // Remove the declined user from the visible profile stack
+      setProfiles(profiles.filter(profile => profile.id !== targetUserId));
+
+      Alert.alert('Success', `You declined user: ${targetUserId}`);
+    } catch (error) {
+      console.error('Error declining user:', error);
+      Alert.alert('Error', 'Failed to decline user');
+    }
+  };
+
   const toggleGender = (gender) => {
     if (selectedGenders.includes(gender)) {
       // Prevent deselecting if it's the last selected gender
@@ -142,18 +200,22 @@ const Home = () => {
 
   // Render each profile card in the carousel
   const renderProfileCard = ({ item }) => (
+    console.log('photos are', item.name, item.photos),
     <View style={styles.card}>
       {/* Display photos in a carousel */}
-      <FlatList
-        data={item.photos}  // Assuming `item.photos` is an array of image URLs
-        horizontal  // Enable horizontal scrolling
-        pagingEnabled  // Snap to individual images
-        showsHorizontalScrollIndicator={false}  // Hide scroll indicator
-        keyExtractor={(photo, index) => index.toString()}  // Use index as key
-        renderItem={({ item: photo }) => (
-          <Image source={{ uri: photo }} style={styles.profileImage} />
-        )}
-      />
+      <View style={styles.photoCarouselContainer}>
+        <FlatList
+          data={item.photos}  // Assuming `item.photos` is an array of image URLs
+          //horizontal  // Enable horizontal scrolling
+          pagingEnabled  // Snap to individual images
+          //showsHorizontalScrollIndicator={false}  // Hide scroll indicator
+          keyExtractor={(photo, index) => index.toString()}  // Use index as key
+          renderItem={({ item: photo }) => (
+            <Image source={{ uri: photo }} style={styles.profileImage} />
+          )}
+        />
+      </View>
+      
       <View style={styles.textContainer}>
         <Text style={styles.name}>{item.name}, {item.age}</Text>
         <Text style={styles.bio}>{item.bio}</Text>
@@ -174,7 +236,7 @@ const Home = () => {
   return (
     <>
       {/* Hide the status bar */}
-      <StatusBar hidden={true} />
+      <StatusBar hidden={false} />
 
       {/* Main screen content */}
       <SafeAreaView style={styles.container} edges={['left', 'right']}>    
@@ -199,7 +261,7 @@ const Home = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          contentContainerStyle={styles.carousel}
+          contentContainerStyle={styles.profilesCarousel}
           bounces={false}  // Disable the bouncy effect on iOS when dragging down
 
         />
@@ -329,8 +391,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
-  carousel: {
-    alignItems: 'center',
+  profilesCarousel: {
+    alignItems: 'top',
+  },
+  photoCarouselContainer: {
+    height: height * 0.5,
   },
   card: {
     width: width,
@@ -346,7 +411,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   textContainer: {
-    marginTop: height * 0.5,
+    //marginTop: height * 0.5,
     paddingHorizontal: 20,
     paddingTop: 20,
   },

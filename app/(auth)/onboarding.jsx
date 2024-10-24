@@ -28,14 +28,18 @@ const onboardingPages = [
   },
   {
     id: '4',
-    title: 'Enter Your Bio',
+    title: 'What are you living with?',
   },
   {
     id: '5',
-    title: 'Upload Your Photos',
+    title: 'Enter Your Bio',
   },
   {
     id: '6',
+    title: 'Upload Your Photos',
+  },
+  {
+    id: '7',
     title: 'Set Your Location',
   },
 ];
@@ -51,6 +55,7 @@ const Onboarding = () => {
   const [month, setMonth] = useState('1');  // Default to January
   const [year, setYear] = useState('2000');  // Default to the year 2000
   const [gender, setGender] = useState('');
+  const [livingWith, setLivingWith] = useState([]);
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState([]);  // Array to store selected photos (max 6)
   const [isUploading, setIsUploading] = useState(false);  // Track upload state
@@ -105,16 +110,48 @@ const Onboarding = () => {
     setCurrentPage(newPage);  // Update the current page state
   };
 
-  // Function to go to the next page or finish the onboarding process
   const handleNext = async () => {
-    if (currentPage < onboardingPages.length - 1) {
-      // Scroll to the next page
-      flatListRef.current.scrollToIndex({ index: currentPage + 1 });
-    } else {
-      // On the last page, save user data
-      await saveUserData();
+    // Check validation for each page
+    if (currentPage === 0 && !name.trim()) {
+      Alert.alert('Error', 'Please enter your name');
+      return;
     }
-  };
+    if (currentPage === 1 && (!day || !month || !year)) {
+      Alert.alert('Error', 'Please enter your birthdate');
+      return;
+    }
+    if (currentPage === 2 && !gender) {
+      Alert.alert('Error', 'Please select your gender');
+      return;
+    }
+    if (currentPage === 3 && livingWith.length === 0) {
+      Alert.alert('Error', 'Please select what you are living with');
+      return;
+    }
+    if (currentPage === 4 && !bio.trim()) {
+      Alert.alert('Error', 'Please enter your bio');
+      return;
+    }
+    if (currentPage === 5 && photos.length === 0) {
+      Alert.alert('Error', 'Please upload at least one photo');
+      return;
+    }
+    if (currentPage === 6 && !location) {
+      Alert.alert('Error', 'Please set your location');
+      return;
+    }
+  
+    // Proceed to next page if not on the last page
+    if (currentPage < onboardingPages.length - 1) {
+      setCurrentPage((prevPage) => {
+        const nextPage = prevPage + 1;
+        flatListRef.current.scrollToIndex({ index: nextPage, animated: true });
+        return nextPage;
+      });
+    } else {
+      await saveUserData();  // Final page, save user data
+    }
+  };  
 
   // Function to pick multiple photos (up to 6)
   const pickPhotos = async () => {
@@ -222,6 +259,8 @@ const Onboarding = () => {
         privateRequests: [],
         privateAccepted: [],
         onboardingCompleted: true,
+        livingWith: livingWith,
+        paused: false,
       }, { merge: true });  // Merge to avoid overwriting existing fields
 
       // Navigate to home after onboarding is complete
@@ -304,6 +343,23 @@ const Onboarding = () => {
       return (
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
+          <View style={styles.livingWithContainer}>
+            <TouchableOpacity onPress={() => setLivingWith('HSV1-O')}>
+              <Text style={styles.livingWithOption}>{livingWith === 'HSV1-O' ? '✓ HSV1-O' : 'HSV1-O'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setLivingWith('HSV1-G')}>
+              <Text style={styles.livingWithOption}>{livingWith === 'HSV1-G' ? '✓ HSV1-G' : 'HSV1-G'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setLivingWith('HSV2-O')}>
+              <Text style={styles.livingWithOption}>{livingWith === 'HSV2-O' ? '✓ HSV2-O' : 'HSV2-O'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    } else if (item.id === '5') {
+      return (
+        <View style={[styles.page, { width }]}>
+          <Text style={styles.title}>{item.title}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Tell us about yourself"
@@ -314,7 +370,7 @@ const Onboarding = () => {
           />
         </View>
       );
-    } else if (item.id === '5') {
+    } else if (item.id === '6') {
       return (
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
@@ -340,7 +396,7 @@ const Onboarding = () => {
           </ScrollView>
         </View>
       );
-    } else if (item.id === '6') {
+    } else if (item.id === '7') {
         return (
             <View style={[styles.page, { width }]}>
               <Text style={styles.title}>{item.title}</Text>
@@ -368,11 +424,10 @@ const Onboarding = () => {
         renderItem={renderPage}
         keyExtractor={(item) => item.id}
         horizontal
-        pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}  // Use the handleScroll function here
         ref={flatListRef}
         scrollEventThrottle={16}
+        scrollEnabled={false}  // Disable swiping
       />
 
       {/* Pagination dots */}
@@ -475,6 +530,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   genderOption: {
+    fontSize: 18,
+    color: '#fff',
+    marginVertical: 10,  // Add spacing between gender options
+  },
+  livingWithContainer: {
+    flexDirection: 'column',  // Stack vertically
+    justifyContent: 'space-around',
+    alignItems: 'flex-start',
+    width: '80%',
+    marginTop: 20,
+  },
+  livingWithOption: {
     fontSize: 18,
     color: '#fff',
     marginVertical: 10,  // Add spacing between gender options
