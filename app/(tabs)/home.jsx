@@ -198,30 +198,62 @@ const Home = () => {
     }
   };
 
-  // Render each profile card in the carousel
-  const renderProfileCard = ({ item }) => (
-    console.log('photos are', item.name, item.photos),
+  // Inside renderProfileCard, where item represents a user profile
+const renderProfileCard = ({ item }) => {
+  // Placeholder image imports
+  const placeholderImages = [
+    require('../../assets/images/placeholder-profile-1.png'),
+    require('../../assets/images/placeholder-profile-2.png'),
+    require('../../assets/images/placeholder-profile-3.png'),
+  ];
+
+  // Ensure a consistent array length of 3 images
+  const privatePhotos = [
+    ...(item.privatePhotos || []).slice(0, 3), // Use private photos if available, limited to 3
+    ...placeholderImages.slice((item.privatePhotos || []).length) // Fill with placeholders as needed
+  ];
+
+  return (
     <View style={styles.card}>
-      {/* Display photos in a carousel */}
+      {/* Photo Carousel */}
       <View style={styles.photoCarouselContainer}>
         <FlatList
-          data={item.photos}  // Assuming `item.photos` is an array of image URLs
-          //horizontal  // Enable horizontal scrolling
-          pagingEnabled  // Snap to individual images
+          data={item.photos}
+          pagingEnabled
           nestedScrollEnabled
-          showsVerticalScrollIndicator={false}  // Hide scroll indicator
-          keyExtractor={(photo, index) => index.toString()}  // Use index as key
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(photo, index) => index.toString()}
           renderItem={({ item: photo }) => (
             <Image source={{ uri: photo }} style={styles.profileImage} />
           )}
         />
       </View>
       
+      {/* Profile Text */}
       <View style={styles.textContainer}>
         <Text style={styles.name}>{item.name}, {item.age}</Text>
         <Text style={styles.bio}>{item.bio}</Text>
-  
-        {/* Like and Decline Buttons */}
+
+        {/* Private Album */}
+        <View style={styles.privateAlbumContainer}>
+          <Text style={styles.albumTitle}>Private Album</Text>
+          <View style={styles.blurredImagesContainer}>
+            {privatePhotos.map((photo, index) => (
+              <Image
+                key={index}
+                source={typeof photo === 'string' ? { uri: photo } : photo}
+                style={styles.blurredImage}
+                blurRadius={30}
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.requestAccessButton} onPress={() => handleLike(item.id)}>
+            <Text style={styles.requestAccessText}>Like and Request Access</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.likeButton} onPress={() => handleLike(item.id)}>
             <Ionicons name="heart" size={30} color="black" />
@@ -233,7 +265,10 @@ const Home = () => {
       </View>
     </View>
   );
+};
 
+
+  
   return (
     <>
       {/* Hide the status bar */}
@@ -524,6 +559,40 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
   },
+  privateAlbumContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+  },
+  albumTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  blurredImagesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  blurredImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 10,
+  },
+  requestAccessButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  requestAccessText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  
 });
 
 export default Home;
