@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, Dimensions, Button, Alert } from 'react-native';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Button, Alert, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../firebaseConfig';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc } from 'firebase/firestore';
 import uuid from 'react-native-uuid';  // Use react-native-uuid for generating UUIDs
+import { Ionicons } from '@expo/vector-icons';
 import { Timestamp } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,6 +15,13 @@ const likeProfiles = () => {
   const router = useRouter();  // Router to navigate
   const currentUserId = FIREBASE_AUTH.currentUser.uid;  // Get the logged-in user's ID
   const [user, setUser] = useState(null);
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   // Fetch the profile data of the liked user
   useEffect(() => {
@@ -88,19 +97,24 @@ const likeProfiles = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="chevron-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {/* Photos Carousel */}
-      <ScrollView horizontal pagingEnabled style={styles.photosContainer}>
-        {user.photos && user.photos.length > 0 ? (
-          user.photos.map((photo, index) => (
-            <Image key={index} source={{ uri: photo }} style={styles.photo} />
-          ))
-        ) : (
-          <View style={styles.noPhotosContainer}>
-            <Text style={styles.noPhotosText}>No Photos Available</Text>
-          </View>
-        )}
-      </ScrollView>
+      <View style={styles.photoCarouselContainer}>
+        <FlatList
+          data={user.photos}
+          keyExtractor={(photo, index) => index.toString()}
+          renderItem={({ item: photo }) => (
+            <Image source={{ uri: photo }} style={styles.profileImage} />
+          )}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
 
       {/* User Information */}
       <View style={styles.infoContainer}>
@@ -113,7 +127,7 @@ const likeProfiles = () => {
           <Button title="Decline" onPress={handleDecline} color="red" />
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -123,24 +137,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f8f8',
   },
-  photosContainer: {
-    width: width,
-    height: height * 0.5,  // 50% of the screen height for the photo carousel
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+    borderRadius: 20,
+    zIndex: 10,
   },
-  photo: {
-    width: width,
-    height: '100%',  // Full height of the container
-    resizeMode: 'cover',  // Maintain aspect ratio and cover the area
+  photoCarouselContainer: {
+    height: height * 0.5,  // Fixed height for the carousel
+    width: '100%',
   },
-  noPhotosContainer: {
+  profileImage: {
     width: width,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noPhotosText: {
-    fontSize: 18,
-    color: '#aaa',
+    height: height * 0.5,  // Adjust image to fit within container height
+    resizeMode: 'cover',
   },
   infoContainer: {
     padding: 20,

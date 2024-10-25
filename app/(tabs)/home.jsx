@@ -208,7 +208,8 @@ const Home = () => {
           data={item.photos}  // Assuming `item.photos` is an array of image URLs
           //horizontal  // Enable horizontal scrolling
           pagingEnabled  // Snap to individual images
-          //showsHorizontalScrollIndicator={false}  // Hide scroll indicator
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}  // Hide scroll indicator
           keyExtractor={(photo, index) => index.toString()}  // Use index as key
           renderItem={({ item: photo }) => (
             <Image source={{ uri: photo }} style={styles.profileImage} />
@@ -404,8 +405,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   profileImage: {
-    position: 'absolute',
-    top: 0,
     width: '100%',
     height: height * 0.5,
     resizeMode: 'cover',

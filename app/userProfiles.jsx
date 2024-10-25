@@ -1,30 +1,25 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { Ionicons } from '@expo/vector-icons';  // Import icons
-import { useNavigation } from '@react-navigation/native';  // Use navigation hook
-
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 const UserProfiles = () => {
-  const { userId } = useLocalSearchParams();  // Get the userId from the route parameters
-  const router = useRouter();  // Router to navigate back
-  const currentUserId = FIREBASE_AUTH.currentUser.uid;  // Get the logged-in user's ID
+  const { userId } = useLocalSearchParams();
+  const router = useRouter();
   const [user, setUser] = useState(null);
-  const navigation = useNavigation();  // Access navigation
+  const navigation = useNavigation();
 
-
-  // Remove default header bar by setting options in useLayoutEffect
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerShown: false,  // Hide the default header bar
+      headerShown: false,
     });
   }, [navigation]);
 
-  // Fetch the profile data of the liked user
   useEffect(() => {
     const fetchUser = async () => {
       const userDocRef = doc(FIREBASE_DB, 'users', userId);
@@ -44,31 +39,31 @@ const UserProfiles = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={24} color="#fff" />
       </TouchableOpacity>
 
       {/* Photos Carousel */}
-      <ScrollView horizontal pagingEnabled style={styles.photosContainer}>
-        {user.photos && user.photos.length > 0 ? (
-          user.photos.map((photo, index) => (
-            <Image key={index} source={{ uri: photo }} style={styles.photo} />
-          ))
-        ) : (
-          <View style={styles.noPhotosContainer}>
-            <Text style={styles.noPhotosText}>No Photos Available</Text>
-          </View>
-        )}
-      </ScrollView>
+      <View style={styles.photoCarouselContainer}>
+        <FlatList
+          data={user.photos}
+          keyExtractor={(photo, index) => index.toString()}
+          renderItem={({ item: photo }) => (
+            <Image source={{ uri: photo }} style={styles.profileImage} />
+          )}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
 
       {/* User Information */}
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{user.name}, {user.age}</Text>
         <Text style={styles.bio}>{user.bio}</Text>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -80,36 +75,26 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 40,  // Adjust based on where you want the button to appear
-    left: 20, // Adjust based on your design
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background
+    top: 40,
+    left: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
-    borderRadius: 20,  // Circular button
-    zIndex: 10,  // Ensure the button is above all other content
+    borderRadius: 20,
+    zIndex: 10,
   },
-  photosContainer: {
+  photoCarouselContainer: {
+    height: height * 0.5,  // Fixed height for the carousel
+    width: '100%',
+  },
+  profileImage: {
     width: width,
-    height: height * 0.5,  // 50% of the screen height for the photo carousel
-  },
-  photo: {
-    width: width,
-    height: '100%',  // Full height of the container
-    resizeMode: 'cover',  // Maintain aspect ratio and cover the area
-  },
-  noPhotosContainer: {
-    width: width,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noPhotosText: {
-    fontSize: 18,
-    color: '#aaa',
+    height: height * 0.5,  // Adjust image to fit within container height
+    resizeMode: 'cover',
   },
   infoContainer: {
     padding: 20,
     backgroundColor: '#fff',
-    marginTop: -20,  // Slight overlap with the photos
+    marginTop: -20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },

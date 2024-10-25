@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker'; // Import ImagePicker to allow
 import { MaterialIndicator } from 'react-native-indicators';  // Import ActivityIndicator
 import { CheckBox } from 'react-native-elements';  // Import CheckBox from react-native-elements
 import { Ionicons } from '@expo/vector-icons';  // Icon library for back button
+import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker
 
 const EditProfile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -25,7 +26,6 @@ const EditProfile = () => {
   const [uploadingRegularIndex, setUploadingRegularIndex] = useState(null);
   const [uploadingPrivateIndex, setUploadingPrivateIndex] = useState(null);
 
-  // Gender and Living With states
   const [gender, setGender] = useState('');
   const [livingWith, setLivingWith] = useState([]);
 
@@ -310,6 +310,13 @@ const EditProfile = () => {
           />
         ))}
       </View>
+        <TouchableOpacity
+        style={styles.updateLocationButton}
+        onPress={() => router.push('/locationUpdate')}
+        >
+        <Text style={styles.updateLocationButtonText}>Update Location</Text>
+        </TouchableOpacity>
+
 
       {/* Save Profile Button */}
       <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile} disabled={isSaving}>
@@ -417,6 +424,19 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  updateLocationButton: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20,  // Spacing below the button
+    width: '100%',  // Full width button
+  },
+  updateLocationButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
 });
 
