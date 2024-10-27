@@ -25,6 +25,9 @@ const Home = () => {
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState(null);  // Store the user ID
   const [currentUserData, setCurrentUserData] = useState({ likedUsers: [], declinedUsers: [] });  // Track current user data
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
 
   useEffect(() => {
     // Check if the user is authenticated
@@ -150,7 +153,6 @@ const Home = () => {
       // Remove the liked user from the visible profile stack
       setProfiles(profiles.filter(profile => profile.id !== targetUserId));
 
-      Alert.alert('Success', `You liked user: ${targetUserId}`);
     } catch (error) {
       console.error('Error liking user:', error);
       Alert.alert('Error', 'Failed to like user');
@@ -180,6 +182,39 @@ const Home = () => {
     } catch (error) {
       console.error('Error declining user:', error);
       Alert.alert('Error', 'Failed to decline user');
+    }
+  };
+
+  const handleRequestAccess = async (targetUserId) => {
+    try {
+      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+      await updateDoc(targetUserRef, {
+        privateRequests: arrayUnion(currentUserId)
+      });
+      setSelectedProfile(targetUserId); // Set the selected profile for the modal
+      setShowModal(true); // Show the modal
+      console.log(showModal);
+    } catch (error) {
+      console.error('Error requesting access:', error);
+      Alert.alert('Error', 'Failed to send request');
+    }
+  };
+
+  // Define the function to handle sharing the private album
+  const handleSharePrivateAlbum = async () => {
+    try {
+      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
+      
+      // Update the current user's privateAccepted field with the target user's ID
+      await updateDoc(currentUserRef, {
+        privateAccepted: arrayUnion(selectedProfile)  // `selectedProfile` holds the target user's ID
+      });
+
+      handleLike(selectedProfile);  // Call handleLike to like the target user
+      setShowModal(false);  // Close the modal
+    } catch (error) {
+      console.error('Error sharing private album:', error);
+      Alert.alert('Error', 'Failed to share private album');
     }
   };
 
@@ -248,7 +283,7 @@ const renderProfileCard = ({ item }) => {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.requestAccessButton} onPress={() => handleLike(item.id)}>
+          <TouchableOpacity style={styles.requestAccessButton} onPress={() => handleRequestAccess(item.id)}>
             <Text style={styles.requestAccessText}>Like and Request Access</Text>
           </TouchableOpacity>
         </View>
@@ -276,6 +311,30 @@ const renderProfileCard = ({ item }) => {
 
       {/* Main screen content */}
       <SafeAreaView style={styles.container} edges={['left', 'right']}>    
+
+      {/* Modal for requesting private album access */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showModal}
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Would you like to share your private album with this user?</Text>
+
+            {/* Share Private Album Button */}
+            <TouchableOpacity style={styles.shareButton} onPress={handleSharePrivateAlbum}>
+              <Text style={styles.shareButtonText}>Share your private album</Text>
+            </TouchableOpacity>
+
+            {/* Close Modal Button */}
+            <TouchableOpacity style={styles.closeModalButton} onPress={() => setShowModal(false)}>
+              <Text style={styles.closeModalText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
         {/* If there are no profiles, show this view */}
         {filteredProfiles.length === 0 ? (
@@ -592,6 +651,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
+  shareButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 10,  // Spacing between buttons
+  },
+  shareButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },  
   
 });
 
