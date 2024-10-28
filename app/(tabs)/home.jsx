@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { View, Text, FlatList, Image, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';  // Import Firestore config
@@ -9,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import RangeSlider from 'react-native-range-slider-expo';  // Import the range slider
 import Slider from '@react-native-community/slider'; 
 import haversine from 'haversine-distance';  // Import haversine formula function
-
+const functions = getFunctions();
 const { width, height } = Dimensions.get('window');  // Get screen dimensions
 
 const Home = () => {
@@ -78,27 +79,43 @@ const Home = () => {
   };
 
   const fetchProfiles = async () => {
-    try {
-      const profilesSnapshot = await getDocs(collection(FIREBASE_DB, 'users'));
-      const profilesData = profilesSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return { id: doc.id, ...data };
-      }).filter(profile => {
-        // Include users who are not paused or where paused field doesn't exist
+    const fetchProfilesFunc = httpsCallable(functions, 'fetchProfiles');
+    const response = await fetchProfilesFunc({
+      currentUserId,
+      likedUsers: currentUserData.likedUsers,
+      declinedUsers: currentUserData.declinedUsers,
+    });
 
-        const isNotPaused =  profile.paused === false || profile.paused === undefined;
-  
-        return isNotPaused && profile.id !== currentUserId
-          && !currentUserData.likedUsers.includes(profile.id)
-          && !currentUserData.declinedUsers.includes(profile.id);
-      });
-  
-      setProfiles(profilesData);
-    } catch (error) {
-      console.error('Error fetching profiles:', error);
-      Alert.alert('Error', 'Failed to load profiles');
+    if (response.data && response.data.length > 0) {
+      setProfiles(response.data);  // Set the entire array, not just the first item
+    } else {
+      console.log("No profiles found.");
     }
   };
+
+
+  // const fetchProfiles = async () => {
+  //   try {
+  //     const profilesSnapshot = await getDocs(collection(FIREBASE_DB, 'users'));
+  //     const profilesData = profilesSnapshot.docs.map(doc => {
+  //       const data = doc.data();
+  //       return { id: doc.id, ...data };
+  //     }).filter(profile => {
+  //       // Include users who are not paused or where paused field doesn't exist
+
+  //       const isNotPaused =  profile.paused === false || profile.paused === undefined;
+  
+  //       return isNotPaused && profile.id !== currentUserId
+  //         && !currentUserData.likedUsers.includes(profile.id)
+  //         && !currentUserData.declinedUsers.includes(profile.id);
+  //     });
+  
+  //     setProfiles(profilesData);
+  //   } catch (error) {
+  //     console.error('Error fetching profiles:', error);
+  //     Alert.alert('Error', 'Failed to load profiles');
+  //   }
+  // };
   
 
   const filterProfiles = () => {
@@ -164,89 +181,164 @@ const Home = () => {
 
   const handleLike = async (targetUserId) => {
     try {
-      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+      // Call the Firebase Function
+      const handleLikeFunc = httpsCallable(functions, 'handleLike');
+      const response = await handleLikeFunc({ currentUserId, targetUserId });
   
-      // Update the current user's list of liked users
-      await updateDoc(currentUserRef, {
-        likedUsers: arrayUnion(targetUserId),  // Add target user to likedUsers array
-        hiddenProfiles: arrayUnion(targetUserId),  // Add target user to hiddenProfiles array
-      });
-  
-      // Update the target user's list of received likes
-      await updateDoc(targetUserRef, {
-        receivedLikes: arrayUnion(currentUserId),  // Add current user to receivedLikes array
-      });
-  
-      // Remove the liked user from the visible profile stack
-      setProfiles(profiles.filter(profile => profile.id !== targetUserId));
-  
+      if (response.data.success) {
+        // Update profiles in state by removing the liked user
+        setProfiles(profiles.filter(profile => profile.id !== targetUserId));
+      } else {
+        console.log("Failed to like profile.");
+        Alert.alert("Error", "Failed to like the profile.");
+      }
     } catch (error) {
-      console.error('Error liking user:', error);
-      Alert.alert('Error', 'Failed to like user');
+      console.error("Error liking user:", error);
+      Alert.alert("Error", "Failed to like user");
     }
   };
-  
 
-  // Function to handle a 'Decline' action
+  // const handleLike = async (targetUserId) => {
+  //   try {
+  //     const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
+  //     const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+  
+  //     // Update the current user's list of liked users
+  //     await updateDoc(currentUserRef, {
+  //       likedUsers: arrayUnion(targetUserId),  // Add target user to likedUsers array
+  //       hiddenProfiles: arrayUnion(targetUserId),  // Add target user to hiddenProfiles array
+  //     });
+  
+  //     // Update the target user's list of received likes
+  //     await updateDoc(targetUserRef, {
+  //       receivedLikes: arrayUnion(currentUserId),  // Add current user to receivedLikes array
+  //     });
+  
+  //     // Remove the liked user from the visible profile stack
+  //     setProfiles(profiles.filter(profile => profile.id !== targetUserId));
+  
+  //   } catch (error) {
+  //     console.error('Error liking user:', error);
+  //     Alert.alert('Error', 'Failed to like user');
+  //   }
+  // };
+  
   const handleDecline = async (targetUserId) => {
     try {
-      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+      // Call the Firebase Function
+      const handleDeclineFunc = httpsCallable(functions, 'handleDecline');
+      const response = await handleDeclineFunc({ currentUserId, targetUserId });
   
-      // Update the current user's list of declined users
-      await updateDoc(currentUserRef, {
-        declinedUsers: arrayUnion(targetUserId),  // Add target user to declinedUsers array
-        hiddenProfiles: arrayUnion(targetUserId),  // Add target user to hiddenProfiles array
-      });
-  
-      // Update the target user's list of received declines
-      await updateDoc(targetUserRef, {
-        receivedDeclines: arrayUnion(currentUserId),  // Add current user to receivedDeclines array
-      });
-  
-      // Remove the declined user from the visible profile stack
-      setProfiles(profiles.filter(profile => profile.id !== targetUserId));
-  
-      Alert.alert('Success', `You declined user: ${targetUserId}`);
+      if (response.data.success) {
+        // Update profiles in state by removing the declined user
+        setProfiles(profiles.filter(profile => profile.id !== targetUserId));
+      } else {
+        console.log("Failed to decline profile.");
+        Alert.alert("Error", "Failed to decline the profile.");
+      }
     } catch (error) {
-      console.error('Error declining user:', error);
-      Alert.alert('Error', 'Failed to decline user');
+      console.error("Error declining user:", error);
+      Alert.alert("Error", "Failed to decline user");
     }
-  };  
+  };
+  // Function to handle a 'Decline' action
+  // const handleDecline = async (targetUserId) => {
+  //   try {
+  //     const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
+  //     const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+  
+  //     // Update the current user's list of declined users
+  //     await updateDoc(currentUserRef, {
+  //       declinedUsers: arrayUnion(targetUserId),  // Add target user to declinedUsers array
+  //       hiddenProfiles: arrayUnion(targetUserId),  // Add target user to hiddenProfiles array
+  //     });
+  
+  //     // Update the target user's list of received declines
+  //     await updateDoc(targetUserRef, {
+  //       receivedDeclines: arrayUnion(currentUserId),  // Add current user to receivedDeclines array
+  //     });
+  
+  //     // Remove the declined user from the visible profile stack
+  //     setProfiles(profiles.filter(profile => profile.id !== targetUserId));
+  
+  //     Alert.alert('Success', `You declined user: ${targetUserId}`);
+  //   } catch (error) {
+  //     console.error('Error declining user:', error);
+  //     Alert.alert('Error', 'Failed to decline user');
+  //   }
+  // };  
 
   const handleRequestAccess = async (targetUserId) => {
     try {
-      const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
-      await updateDoc(targetUserRef, {
-        privateRequests: arrayUnion(currentUserId)
-      });
-      setSelectedProfile(targetUserId); // Set the selected profile for the modal
-      setShowModal(true); // Show the modal
-      console.log(showModal);
+      // Call the Firebase Function
+      const handleRequestAccessFunc = httpsCallable(functions, 'handleRequestAccess');
+      const response = await handleRequestAccessFunc({ currentUserId, targetUserId });
+  
+      if (response.data.success) {
+        // Provide user feedback upon successful access request
+        Alert.alert("Request Sent", "Your request to access the private album has been sent.");
+        setSelectedProfile(targetUserId);  // Set the selected profile for the modal if needed
+        setShowModal(true);  // Show the modal or perform any additional UI updates
+      } else {
+        console.log("Failed to send access request.");
+        Alert.alert("Error", "Failed to send access request.");
+      }
     } catch (error) {
-      console.error('Error requesting access:', error);
-      Alert.alert('Error', 'Failed to send request');
+      console.error("Error requesting access:", error);
+      Alert.alert("Error", "Failed to send access request");
     }
   };
+  // const handleRequestAccess = async (targetUserId) => {
+  //   try {
+  //     const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
+  //     await updateDoc(targetUserRef, {
+  //       privateRequests: arrayUnion(currentUserId)
+  //     });
+  //     setSelectedProfile(targetUserId); // Set the selected profile for the modal
+  //     setShowModal(true); // Show the modal
+  //     console.log(showModal);
+  //   } catch (error) {
+  //     console.error('Error requesting access:', error);
+  //     Alert.alert('Error', 'Failed to send request');
+  //   }
+  // };
 
-  // Define the function to handle sharing the private album
-  const handleSharePrivateAlbum = async () => {
+  const handleSharePrivateAlbum = async (targetUserId) => {
     try {
-      const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
-      
-      // Update the current user's privateAccepted field with the target user's ID
-      await updateDoc(currentUserRef, {
-        privateAccepted: arrayUnion(selectedProfile)  // `selectedProfile` holds the target user's ID
-      });
-
-      handleLike(selectedProfile);  // Call handleLike to like the target user
-      setShowModal(false);  // Close the modal
+      // Call the Firebase Function
+      const handleSharePrivateAlbumFunc = httpsCallable(functions, 'handleSharePrivateAlbum');
+      const response = await handleSharePrivateAlbumFunc({ currentUserId, targetUserId });
+  
+      if (response.data.success) {
+        // Provide feedback that the album was successfully shared
+        Alert.alert("Success", "Your private album has been shared with the user.");
+        setShowModal(false);  // Close the modal after sharing the album
+      } else {
+        console.log("Failed to share private album.");
+        Alert.alert("Error", "Failed to share private album.");
+      }
     } catch (error) {
-      console.error('Error sharing private album:', error);
-      Alert.alert('Error', 'Failed to share private album');
+      console.error("Error sharing private album:", error);
+      Alert.alert("Error", "Failed to share private album");
     }
   };
+  // Define the function to handle sharing the private album
+  // const handleSharePrivateAlbum = async () => {
+  //   try {
+  //     const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
+      
+  //     // Update the current user's privateAccepted field with the target user's ID
+  //     await updateDoc(currentUserRef, {
+  //       privateAccepted: arrayUnion(selectedProfile)  // `selectedProfile` holds the target user's ID
+  //     });
+
+  //     handleLike(selectedProfile);  // Call handleLike to like the target user
+  //     setShowModal(false);  // Close the modal
+  //   } catch (error) {
+  //     console.error('Error sharing private album:', error);
+  //     Alert.alert('Error', 'Failed to share private album');
+  //   }
+  // };
 
   const toggleGender = (gender) => {
     if (selectedGenders.includes(gender)) {
