@@ -162,24 +162,24 @@ const EditProfile = () => {
   };
 
   // Save profile
-  const handleSaveProfile = async () => {
-    setIsSaving(true);
-    try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      await updateDoc(userDocRef, {
-        name,  // Save the updated name
-        bio,
-        photos,
-        privatePhotos,
-      });
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    const handleSaveProfile = async () => {
+        setIsSaving(true);
+        try {
+        const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
+        await updateDoc(userDocRef, {
+            name,
+            bio,
+            photos,
+            privatePhotos,
+        });
+        } catch (error) {
+        console.error('Error updating profile:', error);
+        Alert.alert('Error', 'Failed to update profile.');
+        } finally {
+        setIsSaving(false);
+        }
+    };
+  
 
   // Photo upload grid (same as previous version)
   const renderPhotoGrid = () => {
@@ -218,12 +218,15 @@ const EditProfile = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
         {/* Custom back button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}  // Ensure this is `navigation.goBack()`
-      >
-        <Ionicons name="chevron-back" size={24} color="#fff" />
-      </TouchableOpacity>
+        <TouchableOpacity
+            style={styles.backButton}
+            onPress={async () => {
+                await handleSaveProfile(); // Save the profile data before navigating back
+                navigation.goBack(); // Navigate back after saving
+            }}
+            >
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
       <Text style={styles.header}>Edit Profile</Text>
 
       {/* Name input */}
@@ -317,11 +320,6 @@ const EditProfile = () => {
         <Text style={styles.updateLocationButtonText}>Update Location</Text>
         </TouchableOpacity>
 
-
-      {/* Save Profile Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile} disabled={isSaving}>
-        <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save Profile'}</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 };

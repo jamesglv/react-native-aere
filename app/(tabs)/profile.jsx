@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
 import { FIREBASE_AUTH, FIREBASE_DB } from '../../firebaseConfig'; // Import Firestore and Firebase Auth config
 import { updateDoc, doc, getDoc } from 'firebase/firestore'; // Firestore functions
@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth'; // Firebase sign-out function
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient from expo-linear-gradient
 import { useRouter } from 'expo-router';  // Import useRouter from expo-router
 import { Switch } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Profile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -40,27 +41,11 @@ const Profile = () => {
   };
 
   // Fetch user data on component mount
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  // Function to update the user's profile information in Firestore
-  const handleSaveProfile = async () => {
-    setIsSaving(true);
-    try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      await updateDoc(userDocRef, {
-        name,
-        bio,
-      });
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again later.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
   // Function to handle the logout
   const handleLogout = async () => {

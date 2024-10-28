@@ -39,6 +39,30 @@ const Home = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchCurrentUserData = async () => {
+      try {
+        const userDoc = await getDoc(doc(FIREBASE_DB, 'users', currentUserId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setCurrentUserData(prevData => ({
+            ...prevData,
+            likedUsers: userData.likedUsers || [],
+            declinedUsers: userData.declinedUsers || [],
+            hiddenProfiles: userData.hiddenProfiles || [],  // Ensure hiddenProfiles is included
+          }));
+          setCurrentUserLocation(userData.location);  // Assuming location is stored as { latitude, longitude }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+  
+    if (currentUserId) {
+      fetchCurrentUserData();
+    }
+  }, [currentUserId]);
+  
   // Function to handle the logout
   const handleLogout = async () => {
     try {
@@ -95,7 +119,11 @@ const Home = () => {
       // Filter by gender
       const isGenderSelected = selectedGenders.length === 0 || selectedGenders.includes(profile.gender);
   
-      return isNotPaused && isWithinAgeRange && isWithinDistance && isGenderSelected;
+      // Filter out hidden profiles
+      const isNotHidden = !currentUserData.hiddenProfiles?.includes(profile.id);
+      console.log('hidden is:', currentUserData.hiddenProfiles);
+
+      return isNotPaused && isWithinAgeRange && isWithinDistance && isGenderSelected && isNotHidden;
     });
   
     setFilteredProfiles(filtered);
@@ -134,56 +162,58 @@ const Home = () => {
     setRefreshing(false);
   };
 
-  // Function to handle a 'Like' action
   const handleLike = async (targetUserId) => {
     try {
       const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
       const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
-
+  
       // Update the current user's list of liked users
       await updateDoc(currentUserRef, {
-        likedUsers: arrayUnion(targetUserId)  // Add target user to likedUsers array
+        likedUsers: arrayUnion(targetUserId),  // Add target user to likedUsers array
+        hiddenProfiles: arrayUnion(targetUserId),  // Add target user to hiddenProfiles array
       });
-
+  
       // Update the target user's list of received likes
       await updateDoc(targetUserRef, {
-        receivedLikes: arrayUnion(currentUserId)  // Add current user to receivedLikes array
+        receivedLikes: arrayUnion(currentUserId),  // Add current user to receivedLikes array
       });
-
+  
       // Remove the liked user from the visible profile stack
       setProfiles(profiles.filter(profile => profile.id !== targetUserId));
-
+  
     } catch (error) {
       console.error('Error liking user:', error);
       Alert.alert('Error', 'Failed to like user');
     }
   };
+  
 
   // Function to handle a 'Decline' action
   const handleDecline = async (targetUserId) => {
     try {
       const currentUserRef = doc(FIREBASE_DB, 'users', currentUserId);
       const targetUserRef = doc(FIREBASE_DB, 'users', targetUserId);
-
+  
       // Update the current user's list of declined users
       await updateDoc(currentUserRef, {
-        declinedUsers: arrayUnion(targetUserId)  // Add target user to declinedUsers array
+        declinedUsers: arrayUnion(targetUserId),  // Add target user to declinedUsers array
+        hiddenProfiles: arrayUnion(targetUserId),  // Add target user to hiddenProfiles array
       });
-
+  
       // Update the target user's list of received declines
       await updateDoc(targetUserRef, {
-        receivedDeclines: arrayUnion(currentUserId)  // Add current user to receivedDeclines array
+        receivedDeclines: arrayUnion(currentUserId),  // Add current user to receivedDeclines array
       });
-
+  
       // Remove the declined user from the visible profile stack
       setProfiles(profiles.filter(profile => profile.id !== targetUserId));
-
+  
       Alert.alert('Success', `You declined user: ${targetUserId}`);
     } catch (error) {
       console.error('Error declining user:', error);
       Alert.alert('Error', 'Failed to decline user');
     }
-  };
+  };  
 
   const handleRequestAccess = async (targetUserId) => {
     try {
