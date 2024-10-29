@@ -3,6 +3,38 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 const db = admin.firestore();
 
+exports.fetchCurrentUserData = functions.https.onCall(async (data, context) => {
+    // Check for authenticated user
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated to fetch data.'
+      );
+    }
+  
+    const currentUserId = context.auth.uid; // Get the user's ID from the authentication context
+  
+    try {
+      const userDoc = await db.collection("users").doc(currentUserId).get();
+  
+      if (!userDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'User not found');
+      }
+  
+      // Return only the necessary fields for the client
+      const userData = userDoc.data();
+      return {
+        likedUsers: userData.likedUsers || [],
+        declinedUsers: userData.declinedUsers || [],
+        hiddenProfiles: userData.hiddenProfiles || [],
+        location: userData.location || null,
+      };
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw new functions.https.HttpsError('internal', 'Failed to fetch user data');
+    }
+  });
+
 /**
  * Fetches profiles securely from Firestore with server-side filtering.
  */
