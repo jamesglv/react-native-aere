@@ -3,6 +3,7 @@ import { View, Text, FlatList, Image, StyleSheet, Dimensions, TouchableOpacity }
 import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';  // Firestore and Firebase Auth config
 import { doc, getDoc } from 'firebase/firestore';  // Firestore functions
 import { useRouter, useFocusEffect } from 'expo-router';  // Expo Router for navigation and focus effect
+import { fetchReceivedLikes } from '../../firebaseActions'; // Import the fetchReceivedLikes function
 
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
@@ -11,40 +12,20 @@ const Likes = () => {
   const currentUserId = FIREBASE_AUTH.currentUser?.uid;  // Get the logged-in user's ID
   const router = useRouter();  // Use router from Expo Router
 
-  // Function to fetch received likes
-  const fetchReceivedLikes = async () => {
+  // Function to fetch received likes via Firebase Function
+  const fetchAndSetReceivedLikes = async () => {
     try {
-      // Fetch the current user's data from Firestore
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const userSnapshot = await getDoc(userDocRef);
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        const receivedLikesIds = userData.receivedLikes || [];  // Get receivedLikes or empty array if none
-
-        // Fetch profiles for each user who liked the current user
-        const receivedLikesProfiles = await Promise.all(
-          receivedLikesIds.map(async (likeUserId) => {
-            const likeUserRef = doc(FIREBASE_DB, 'users', likeUserId);
-            const likeUserSnapshot = await getDoc(likeUserRef);
-            if (likeUserSnapshot.exists()) {
-              return { id: likeUserId, ...likeUserSnapshot.data() };
-            }
-            return null;  // If no data found for the liked user
-          })
-        );
-
-        // Filter out any null profiles (in case of missing users)
-        setReceivedLikes(receivedLikesProfiles.filter((profile) => profile !== null));
-      }
+      const likesData = await fetchReceivedLikes();
+      setReceivedLikes(likesData);
     } catch (error) {
-      console.error('Error fetching received likes:', error);
+      console.error("Error fetching received likes:", error);
     }
   };
 
   // useFocusEffect to refetch the likes when the screen is focused
   useFocusEffect(
     useCallback(() => {
-      fetchReceivedLikes();  // Refetch data when screen is focused
+      fetchAndSetReceivedLikes();  // Refetch data when screen is focused
     }, [])
   );
 

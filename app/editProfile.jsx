@@ -10,6 +10,7 @@ import { MaterialIndicator } from 'react-native-indicators';  // Import Activity
 import { CheckBox } from 'react-native-elements';  // Import CheckBox from react-native-elements
 import { Ionicons } from '@expo/vector-icons';  // Icon library for back button
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker
+import { fetchUserData } from '../firebaseActions';  // Import the function to fetch data selectively
 
 const EditProfile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -38,20 +39,22 @@ const EditProfile = () => {
   }, [navigation]);
 
   // Fetch user data
-  const fetchUserData = async () => {
-    if (!currentUser) return;
+  const fetchProfileData = async () => {
     try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      const userDoc = await getDoc(userDocRef);
+      const userData = await fetchUserData([
+        'name', 'bio', 'photos', 'privatePhotos', 'gender', 'livingWith'
+      ]);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setName(userData.name || '');  // Load the name from Firestore
+      // Ensure userData exists and set fields if present
+      if (userData) {
+        setName(userData.name || '');
         setBio(userData.bio || '');
         setPhotos(userData.photos || []);
         setPrivatePhotos(userData.privatePhotos || []);
         setGender(userData.gender || '');
         setLivingWith(userData.livingWith || []);
+      } else {
+        console.warn("No user data returned from Firebase");
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -60,7 +63,7 @@ const EditProfile = () => {
   };
 
   useEffect(() => {
-    fetchUserData();
+    fetchProfileData();
   }, []);
 
   // Function to update the user document in Firestore

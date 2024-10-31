@@ -3,38 +3,46 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.fetchCurrentUserData = functions.https.onCall(async (data, context) => {
-    // Check for authenticated user
+// FETCH USER DATA SELECTIVELY
+
+exports.fetchUserData = functions.https.onCall(async (data, context) => {
+    const { fields } = data;
+  
+    // Ensure the user is authenticated
     if (!context.auth) {
       throw new functions.https.HttpsError(
         'unauthenticated',
-        'User must be authenticated to fetch data.'
+        'User must be authenticated to fetch profile data.'
       );
     }
   
-    const currentUserId = context.auth.uid; // Get the user's ID from the authentication context
+    const userId = context.auth.uid;
   
     try {
-      const userDoc = await db.collection("users").doc(currentUserId).get();
+      const userDocRef = db.collection('users').doc(userId);
+      const userDoc = await userDocRef.get();
   
       if (!userDoc.exists) {
-        throw new functions.https.HttpsError('not-found', 'User not found');
+        throw new functions.https.HttpsError('not-found', 'User profile not found');
       }
   
-      // Return only the necessary fields for the client
       const userData = userDoc.data();
-      return {
-        likedUsers: userData.likedUsers || [],
-        declinedUsers: userData.declinedUsers || [],
-        hiddenProfiles: userData.hiddenProfiles || [],
-        location: userData.location || null,
-      };
+  
+      // Ensure selectedData only contains requested fields
+      const selectedData = fields.reduce((result, field) => {
+        if (userData.hasOwnProperty(field)) {
+          result[field] = userData[field];
+        }
+        return result;
+      }, {});
+  
+      return { userData: selectedData };
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error('Error fetching user data:', error);
       throw new functions.https.HttpsError('internal', 'Failed to fetch user data');
     }
   });
-
+  
 /**
  * Fetches profiles securely from Firestore with server-side filtering.
  */
@@ -214,3 +222,182 @@ exports.handleRequestAccess = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+
+//
+// MATCHES FUNCTIONS
+//
+
+exports.fetchMatches = functions.https.onCall(async (data, context) => {
+    const { userId } = data;
+  
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated to fetch matches.'
+      );
+    }
+  
+    try {
+      // Fetch the user's document and matches
+      const userDocRef = db.collection('users').doc(userId);
+      const userSnapshot = await userDocRef.get();
+  
+      if (!userSnapshot.exists) {
+        throw new functions.https.HttpsError(
+          'not-found',
+          'User not found'
+        );
+      }
+  
+      const userData = userSnapshot.data();
+      const matchIds = userData.matches || [];
+  
+      // Fetch match profiles in parallel
+      const matchPromises = matchIds.map(async (matchId) => {
+        const matchDocRef = db.collection('matches').doc(matchId);
+        const matchDocSnapshot = await matchDocRef.get();
+  
+        if (matchDocSnapshot.exists) {
+          const matchData = matchDocSnapshot.data();
+          const usersInMatch = matchData.users || [];
+          const messagePreview = matchData.messagePreview || '';
+          const lastMessage = matchData.lastMessage || 0;
+          const readStatus = matchData.read || {};
+  
+          const otherUserId = usersInMatch.find((id) => id !== userId);
+          
+          if (otherUserId) {
+            const otherUserDocRef = db.collection('users').doc(otherUserId);
+            const otherUserSnapshot = await otherUserDocRef.get();
+            
+            if (otherUserSnapshot.exists) {
+              return {
+                id: otherUserId,
+                matchId,
+                messagePreview,
+                lastMessage,
+                readStatus,
+                ...otherUserSnapshot.data(),
+              };
+            }
+          }
+        }
+        return null;
+      });
+  
+      // Await all match profile fetches and sort
+      const matchProfiles = await Promise.all(matchPromises);
+      const sortedMatches = matchProfiles
+        .filter(profile => profile !== null)
+        .sort((a, b) => b.lastMessage - a.lastMessage);
+  
+      return { matches: sortedMatches };
+    } catch (error) {
+      console.error("Error fetching matches:", error);
+      throw new functions.https.HttpsError("internal", "Error fetching matches");
+    }
+  });
+
+  exports.deleteMatch = functions.https.onCall(async (data, context) => {
+    const { userId, matchId } = data;
+  
+    // Ensure the user is authenticated
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated to delete a match.'
+      );
+    }
+  
+    try {
+      // Remove the match from the user's matches array
+      const userDocRef = db.collection('users').doc(userId);
+      await userDocRef.update({
+        matches: admin.firestore.FieldValue.arrayRemove(matchId),
+      });
+  
+      // Optional: Delete match document or perform further cleanup if necessary
+      const matchDocRef = db.collection('matches').doc(matchId);
+      await matchDocRef.delete();
+  
+      return { success: true, message: 'Match deleted successfully.' };
+    } catch (error) {
+      console.error('Error deleting match:', error);
+      throw new functions.https.HttpsError('internal', 'Error deleting match');
+    }
+  });
+
+  exports.updateReadStatus = functions.https.onCall(async (data, context) => {
+    const { matchId, userId } = data;
+  
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated to update read status.'
+      );
+    }
+  
+    try {
+      const matchDocRef = db.collection('matches').doc(matchId);
+  
+      // Update the read status for the current user
+      await matchDocRef.update({
+        [`read.${userId}`]: true,
+      });
+  
+      return { success: true, message: 'Read status updated successfully.' };
+    } catch (error) {
+      console.error("Error updating read status:", error);
+      throw new functions.https.HttpsError('internal', 'Error updating read status');
+    }
+  });
+
+
+  //
+  // LIKES FUNCTIONS
+  //
+
+  exports.fetchReceivedLikes = functions.https.onCall(async (data, context) => {
+    const { userId } = data;
+  
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated to fetch received likes.'
+      );
+    }
+  
+    try {
+      // Fetch the current user's document
+      const userDocRef = db.collection('users').doc(userId);
+      const userSnapshot = await userDocRef.get();
+  
+      if (!userSnapshot.exists) {
+        throw new functions.https.HttpsError('not-found', 'User not found');
+      }
+  
+      const userData = userSnapshot.data();
+      const receivedLikesIds = userData.receivedLikes || [];
+  
+      // Fetch profiles of users who liked the current user
+      const receivedLikesProfiles = await Promise.all(
+        receivedLikesIds.map(async (likeUserId) => {
+          const likeUserRef = db.collection('users').doc(likeUserId);
+          const likeUserSnapshot = await likeUserRef.get();
+          if (likeUserSnapshot.exists()) {
+            return { id: likeUserId, ...likeUserSnapshot.data() };
+          }
+          return null;
+        })
+      );
+  
+      // Filter out any null values
+      return { receivedLikes: receivedLikesProfiles.filter(profile => profile !== null) };
+    } catch (error) {
+      console.error("Error fetching received likes:", error);
+      throw new functions.https.HttpsError('internal', 'Error fetching received likes');
+    }
+  });
+
+  

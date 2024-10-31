@@ -5,6 +5,8 @@ import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';  // Fi
 import { useRouter, useFocusEffect } from 'expo-router';  // Use expo-router for navigation and focus effect
 import { SwipeListView } from 'react-native-swipe-list-view';  // Import SwipeListView
 import { Ionicons } from '@expo/vector-icons';  // Import Ionicons (or FontAwesome if you prefer)
+import { fetchMatches, deleteMatch, updateReadStatus } from '../../firebaseActions'; // Import your fetchMatches function
+
 
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
@@ -13,85 +15,46 @@ const Chats = () => {
   const currentUserId = FIREBASE_AUTH.currentUser?.uid;  // Get the logged-in user's ID
   const router = useRouter();  // For navigation
 
-  // Function to fetch matched users
-  const fetchMatches = async () => {
+  // Function to fetch matched users via Firebase Function
+  const fetchAndSetMatches = async () => {
     try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const userSnapshot = await getDoc(userDocRef);
-    
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        const matchIds = userData.matches || [];  // Get the matches array or empty if none
-    
-        const matchProfiles = await Promise.all(
-          matchIds.map(async (matchId) => {
-            const matchDocRef = doc(FIREBASE_DB, 'matches', matchId);
-            const matchDocSnapshot = await getDoc(matchDocRef);
-    
-            if (matchDocSnapshot.exists()) {
-              const matchData = matchDocSnapshot.data();
-              const usersInMatch = matchData.users || [];
-              const messagePreview = matchData.messagePreview || '';  // Get messagePreview or empty string
-              const lastMessage = matchData.lastMessage || 0;  // Get the last message timestamp
-              const readStatus = matchData.read || {};  // Get the read status for both users
-    
-              console.log(readStatus);
-              // Find the user in the match that is not the logged-in user
-              const otherUserId = usersInMatch.find((id) => id !== currentUserId);
-    
-              if (otherUserId) {
-                const otherUserDocRef = doc(FIREBASE_DB, 'users', otherUserId);
-                const otherUserSnapshot = await getDoc(otherUserDocRef);
-    
-                if (otherUserSnapshot.exists()) {
-                  return {
-                    id: otherUserId,
-                    matchId,
-                    messagePreview,
-                    lastMessage,  // Include the timestamp for sorting
-                    readStatus,   // Include the read status map
-                    ...otherUserSnapshot.data(),
-                  };
-                }
-              }
-            }
-            return null;  // If no data found for the match or user
-          })
-        );
-    
-        // Sort the matchProfiles by lastMessage in descending order
-        const sortedMatches = matchProfiles
-          .filter((profile) => profile !== null)
-          .sort((a, b) => b.lastMessage - a.lastMessage);  // Most recent first
-    
-        setMatches(sortedMatches);  // Update the matches state with sorted data
-      }
+      const matchData = await fetchMatches();
+      setMatches(matchData);
     } catch (error) {
-      console.error('Error fetching matches:', error);
+      console.error("Error fetching matches:", error);
     }
-  };  
-  
+  };
 
   // useFocusEffect to refetch the matches when the screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      fetchMatches();  // Refetch data when screen is focused
+      fetchAndSetMatches();  // Refetch data when screen is focused
     }, [])
   );
 
-  // Function to handle deletion of a match
   const handleDeleteMatch = async (matchId) => {
     try {
-      // Remove the match from the user's matches array
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUserId);
-      await updateDoc(userDocRef, {
-        matches: arrayRemove(matchId)
-      });
-      
-      setMatches((prevMatches) => prevMatches.filter((match) => match.matchId !== matchId));  // Update UI
-      Alert.alert('Match deleted');
+      const result = await deleteMatch(matchId);
+      if (result.success) {
+        setMatches((prevMatches) => prevMatches.filter((match) => match.matchId !== matchId));
+        Alert.alert('Match deleted successfully');
+      } else {
+        Alert.alert('Failed to delete match');
+      }
     } catch (error) {
-      console.error('Error deleting match:', error);
+      console.error("Error deleting match:", error);
+      Alert.alert("An error occurred while deleting the match.");
+    }
+  };
+
+  const handleUpdateReadStatus = async (matchId) => {
+    try {
+      const result = await updateReadStatus(matchId);
+      if (!result.success) {
+        console.error("Failed to update read status");
+      }
+    } catch (error) {
+      console.error("Error updating read status:", error);
     }
   };
 
@@ -100,64 +63,40 @@ const Chats = () => {
     // Ensure the readStatus exists and includes the current user's ID, defaulting to true if not found
     const isUnread = item.readStatus && item.readStatus[currentUserId] === false;
   
-    // Function to update read status for current user
-    const updateReadStatus = async () => {
-      try {
-        const matchDocRef = doc(FIREBASE_DB, 'matches', item.matchId);
-        await updateDoc(matchDocRef, {
-          [`read.${currentUserId}`]: true,  // Set the current user's read status to true
-        });
-      } catch (error) {
-        console.error('Error updating read status:', error);
-      }
-    };
-  
     return (
       <TouchableOpacity
         style={styles.matchItem}
-        activeOpacity={1}  // Prevent transparency effect when touched
+        activeOpacity={1}
         onPress={async () => {
           try {
-            // Update read status first
-            await updateReadStatus();
-  
-            // Then navigate to the chat screen
-            if (item.matchId && item.name && item.photos && item.photos.length > 0) {
-              const encodedPhotoUrl = encodeURIComponent(item.photos[0]);  // Ensure the URL is encoded
-              router.push({
-                pathname: '/chat',
-                params: {
-                  matchId: item.matchId,  // Now matchId should be correctly passed
-                  name: item.name,
-                  photo: encodedPhotoUrl,  // Pass the URL-encoded photo
-                  id: item.id,
-                },
-              });
-            } else {
-              console.error('Missing parameters:', { matchId: item.matchId, name: item.name, photos: item.photos });
-            }
+            await handleUpdateReadStatus(item.matchId);
+            router.push({
+              pathname: '/chat',
+              params: {
+                matchId: item.matchId,
+                name: item.name,
+                photo: encodeURIComponent(item.photos[0]),
+                id: item.id,
+              },
+            });
           } catch (error) {
-            console.error('Error navigating to chat:', error);
+            console.error("Error navigating to chat:", error);
           }
         }}
       >
-        <Image
-          source={{ uri: item.photos[0] }}  // Assuming the first photo is the profile photo
-          style={styles.profileImage}
-        />
+        <Image source={{ uri: item.photos[0] }} style={styles.profileImage} />
         <View>
           <View style={styles.nameContainer}>
             <Text style={styles.matchName}>{item.name}</Text>
-            {/* Conditionally render the blue dot */}
             {isUnread && <View style={styles.blueDot} />}
           </View>
           <Text style={styles.messagePreview}>
-            {item.messagePreview && item.messagePreview.trim() !== '' ? item.messagePreview : 'Start a conversation'}
+            {item.messagePreview || "Start a conversation"}
           </Text>
         </View>
       </TouchableOpacity>
     );
-  };  
+  };
   
   // Function to render the hidden item
   const renderHiddenItem = (data) => (

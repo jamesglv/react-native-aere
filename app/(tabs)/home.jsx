@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import haversine from 'haversine-distance';
 import ProfileCard from '../../components/ProfileCard';
 import FilterModal from '../../components/FilterModal';
-import { fetchCurrentUserData, fetchProfiles, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum } from '../../firebaseActions';
+import { fetchUserData, fetchProfiles, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum } from '../../firebaseActions';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,15 +32,22 @@ const Home = () => {
     const user = FIREBASE_AUTH.currentUser;
     if (user) {
       setCurrentUserId(user.uid);
-      fetchUserData(user.uid);
+      fetchUserDetails(user.uid);
     } else {
       handleLogout();
     }
   }, []);
 
-  const fetchUserData = async (uid) => {
+  // Fetch user data selectively
+  const fetchUserDetails = async (uid) => {
     try {
-      await fetchCurrentUserData(uid, setCurrentUserData, setCurrentUserLocation);
+      const userData = await fetchUserData(['likedUsers', 'declinedUsers', 'hiddenProfiles', 'location']);
+      setCurrentUserData({
+        likedUsers: userData.likedUsers || [],
+        declinedUsers: userData.declinedUsers || [],
+        hiddenProfiles: userData.hiddenProfiles || [],
+      });
+      setCurrentUserLocation(userData.location || null);
     } catch (error) {
       console.error("Error fetching user data:", error);
       Alert.alert("Error", "Failed to load user data. Please ensure you're signed in.");
@@ -172,6 +179,7 @@ const Home = () => {
             contentContainerStyle={styles.profilesCarousel}
             bounces={false}
           />
+
         )}
 
         <TouchableOpacity style={styles.settingsButton} onPress={toggleFilterModal}>

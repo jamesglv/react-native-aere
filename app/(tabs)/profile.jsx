@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient 
 import { useRouter } from 'expo-router';  // Import useRouter from expo-router
 import { Switch } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { fetchUserData } from '../../firebaseActions'; // Import fetchUserProfileData function
 
 const Profile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -20,30 +21,24 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // State for the toggle
 
-  // Function to fetch user data from Firestore
-  const fetchUserData = async () => {
-    if (!currentUser) return;
+  const fetchAndSetUserProfileData = async () => {
     try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setName(userData.name || '');
-        setBio(userData.bio || '');
-        setPhotos(userData.photos || []);  // Set photos from Firestore (important for the header photo)
-        setIsPaused(userData.paused || false);
-      }
+      // Specify only the fields needed for the Profile page
+      const userData = await fetchUserData(['name', 'bio', 'photos', 'paused']);
+      setName(userData.name || '');
+      setBio(userData.bio || '');
+      setPhotos(userData.photos || []);
+      setIsPaused(userData.paused || false);
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      Alert.alert('Error', 'Failed to load user data.');
+      console.error("Error fetching user data:", error);
+      Alert.alert("Error", "Failed to load user data.");
     }
   };
 
   // Fetch user data on component mount
   useFocusEffect(
     useCallback(() => {
-      fetchUserData();
+      fetchAndSetUserProfileData();
     }, [])
   );
 
