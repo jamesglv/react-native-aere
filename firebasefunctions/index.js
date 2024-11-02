@@ -1,7 +1,88 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const { v4: uuidv4 } = require('uuid');
+const fetch = require('node-fetch');
 admin.initializeApp();
 const db = admin.firestore();
+const storage = admin.storage();
+
+//
+// ONBOARDING FUNCTIONS
+//
+
+// Function to save user profile data
+exports.saveUserProfile = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to save profile data.');
+  }
+  const userId = context.auth.uid;
+  const { name, birthdate, age, gender, bio, photos, location, interested, livingWith, paused } = data;
+
+  try {
+    await db.collection('users').doc(userId).set({
+      name,
+      birthdate,
+      age,
+      gender,
+      bio,
+      photos,
+      location,
+      interested,
+      livingWith,
+      paused,
+      onboardingCompleted: true
+    }, { merge: true });
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving user data:", error);
+    throw new functions.https.HttpsError('internal', 'Failed to save user data');
+  }
+});
+
+// Function to upload user photo
+exports.uploadUserPhoto = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to upload photos.');
+  }
+  const { base64Photo, userId, isPrivate } = data;
+
+  try {
+    const uniqueId = uuid.v4();
+    const folder = isPrivate ? 'private' : 'public';
+    const filePath = `users/${userId}/${folder}/photo-${uniqueId}.jpg`;
+
+    // Convert the base64 string back to binary and upload
+    const buffer = Buffer.from(base64Photo, 'base64');
+    const file = storage.file(filePath);
+    await file.save(buffer, { contentType: 'image/jpeg' });
+
+    const downloadUrl = await file.getSignedUrl({ action: 'read', expires: '03-17-2025' });
+    return { downloadUrl: downloadUrl[0] };
+  } catch (error) {
+    console.error("Error uploading photo:", error);
+    throw new functions.https.HttpsError('internal', 'Failed to upload photo');
+  }
+});
+
+// Function to calculate age based on birthdate
+exports.calculateUserAge = functions.https.onCall(async (data, context) => {
+  const { birthDay, birthMonth, birthYear } = data;
+
+  try {
+    const today = new Date();
+    const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return { age };
+  } catch (error) {
+    console.error("Error calculating age:", error);
+    throw new functions.https.HttpsError('internal', 'Failed to calculate age');
+  }
+});
 
 // FETCH USER DATA SELECTIVELY
 
@@ -222,7 +303,29 @@ exports.handleRequestAccess = functions.https.onCall(async (data, context) => {
     );
   }
 });
+exports.updateGenderPreferences = functions.https.onCall(async (data, context) => {
+  const { currentUserId, updatedGenders } = data;
 
+  if (!context.auth || context.auth.uid !== currentUserId) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to update gender preferences.'
+    );
+  }
+
+  try {
+    const userDocRef = db.collection('users').doc(currentUserId);
+    await userDocRef.update({ interested: updatedGenders });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating gender preferences:", error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Unable to update gender preferences.'
+    );
+  }
+});
 
 //
 // MATCHES FUNCTIONS
@@ -400,4 +503,103 @@ exports.fetchMatches = functions.https.onCall(async (data, context) => {
     }
   });
 
+  //
+  // PROFILE FUNCTIONS
+  //
+
+  exports.updateUserDocument = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated to update profile data.'
+      );
+    }
   
+    const userId = context.auth.uid;
+    const { updatedData } = data;
+  
+    try {
+      const userDocRef = db.collection('users').doc(userId);
+      await userDocRef.update(updatedData);
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating user document:", error);
+      throw new functions.https.HttpsError('internal', 'Failed to update user data');
+    }
+  });
+
+  exports.uploadPhoto = functions.https.onCall(async (data, context) => {
+    // Ensure user is authenticated
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to upload photos.');
+    }
+  
+    const { base64Image, userId, isPrivate } = data;
+  
+    if (!base64Image || !userId) {
+      throw new functions.https.HttpsError('invalid-argument', 'Image data and user ID are required.');
+    }
+  
+    const bucket = admin.storage().bucket();  // Get the default storage bucket
+    const filename = `users/${userId}/${isPrivate ? 'private' : 'public'}/photo-${uuidv4()}.jpg`;
+    const file = bucket.file(filename);
+  
+    try {
+      // Decode the base64 image
+      const buffer = Buffer.from(base64Image, 'base64');
+  
+      // Upload the image to Firebase Storage
+      await file.save(buffer, {
+        metadata: { contentType: 'image/jpeg' },
+      });
+  
+      // Make the image publicly accessible
+      await file.makePublic();
+  
+      // Return the public URL of the uploaded image
+      return { downloadUrl: file.publicUrl() };
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      throw new functions.https.HttpsError('internal', 'Error uploading photo.');
+    }
+  });
+
+exports.deletePhoto = functions.https.onCall(async (data, context) => {
+  const { userId, photoPath, isPrivate } = data;
+
+  if (!context.auth || context.auth.uid !== userId) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to delete a photo.'
+    );
+  }
+
+  try {
+    // Decode the path and remove any leading or bucket references
+    const decodedPath = decodeURIComponent(photoPath)
+      .replace(/^gs:\/\/[^\/]+\//, '') // Remove "gs://bucket-name/" if included
+      .replace(/^https:\/\/[^\/]+\/[^\/]+\//, ''); // Remove "https://bucket-name/" if included
+
+    // Step 1: Remove the photo URL from Firestore
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'User document not found.');
+    }
+
+    // Determine whether it's a public or private photo and remove the URL from Firestore
+    const photosField = isPrivate ? 'privatePhotos' : 'photos';
+    const updatedPhotos = userDoc.data()[photosField].filter((url) => !url.includes(decodedPath));
+    await userRef.update({ [photosField]: updatedPhotos });
+
+    // Step 2: Delete the file from Firebase Storage
+    const bucket = storage.bucket();
+    await bucket.file(decodedPath).delete();
+
+    return { success: true, message: 'Photo deleted successfully from Firestore and Storage' };
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to delete photo.');
+  }
+});

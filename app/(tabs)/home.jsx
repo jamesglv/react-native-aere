@@ -41,12 +41,14 @@ const Home = () => {
   // Fetch user data selectively
   const fetchUserDetails = async (uid) => {
     try {
-      const userData = await fetchUserData(['likedUsers', 'declinedUsers', 'hiddenProfiles', 'location']);
+      const userData = await fetchUserData(['likedUsers', 'declinedUsers', 'hiddenProfiles', 'location', 'interested']);
       setCurrentUserData({
         likedUsers: userData.likedUsers || [],
         declinedUsers: userData.declinedUsers || [],
         hiddenProfiles: userData.hiddenProfiles || [],
+        interested: userData.interested || [],
       });
+      setSelectedGenders(userData.interested || []); // Initialize selectedGenders
       setCurrentUserLocation(userData.location || null);
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -84,6 +86,7 @@ const Home = () => {
 
       const isGenderSelected = selectedGenders.length === 0 || selectedGenders.includes(profile.gender);
       const isNotHidden = !currentUserData.hiddenProfiles?.includes(profile.id);
+      const isInterested = currentUserData.interested?.includes(profile.gender);
 
       return isNotPaused && isWithinAgeRange && isWithinDistance && isGenderSelected && isNotHidden;
     });
@@ -149,7 +152,9 @@ const Home = () => {
           maxDistance={maxDistance}
           setMaxDistance={setMaxDistance}
           selectedGenders={selectedGenders}
+          setSelectedGenders={setSelectedGenders} // Ensure this is passed
           toggleGender={toggleGender}
+          currentUserId={currentUserId} // Pass currentUserId
         />
 
         {filteredProfiles.length === 0 ? (

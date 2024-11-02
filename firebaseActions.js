@@ -5,6 +5,47 @@ import { Alert } from 'react-native';
 
 const functions = getFunctions();
 
+//
+// ONBOARDING FUNCTIONS
+//
+
+export const saveUserProfile = async (userData) => {
+  const saveUserProfileFunc = httpsCallable(functions, 'saveUserProfile');
+  try {
+    const response = await saveUserProfileFunc(userData);
+    if (response.data.success) {
+      console.log("User data saved successfully");
+    } else {
+      throw new Error("Failed to save user data");
+    }
+  } catch (error) {
+    console.error("Error saving user data:", error);
+    throw error;
+  }
+};
+
+export const uploadUserPhoto = async (base64Photo, userId, isPrivate = false) => {
+  const uploadUserPhotoFunc = httpsCallable(functions, 'uploadUserPhoto');
+  try {
+    const response = await uploadUserPhotoFunc({ base64Photo, userId, isPrivate });
+    return response.data.downloadUrl;
+  } catch (error) {
+    console.error("Error uploading photo:", error);
+    throw error;
+  }
+};
+
+export const calculateUserAge = async (birthDay, birthMonth, birthYear) => {
+  const calculateUserAgeFunc = httpsCallable(functions, 'calculateUserAge');
+  try {
+    const response = await calculateUserAgeFunc({ birthDay, birthMonth, birthYear });
+    return response.data.age;
+  } catch (error) {
+    console.error("Error calculating user age:", error);
+    throw error;
+  }
+};
+
 // FETCH USER DATA
 
 export const fetchUserData = async (fields) => {
@@ -116,7 +157,22 @@ export const handleSharePrivateAlbum = async (currentUserId, targetUserId, setSh
     Alert.alert("Error", "Failed to share private album");
   }
 };
+export const updateGenderPreferences = async (currentUserId, updatedGenders) => {
+  try {
+    const updateGenderPreferencesFunc = httpsCallable(functions, 'updateGenderPreferences');
+    const response = await updateGenderPreferencesFunc({ currentUserId, updatedGenders });
 
+    if (response.data.success) {
+      console.log("Gender preferences updated successfully.");
+    } else {
+      console.log("Failed to update gender preferences.");
+      Alert.alert("Error", "Failed to update gender preferences.");
+    }
+  } catch (error) {
+    console.error("Error updating gender preferences:", error);
+    Alert.alert("Error", "Failed to update gender preferences.");
+  }
+};
 
 //
 // MATCHES FUNCTIONS
@@ -166,3 +222,62 @@ export const fetchMatches = async () => {
   
     return response.data.receivedLikes;
   };
+
+  //
+  // PROFILE FUNCTIONS
+  //
+
+  // Cloud Function for updating user document
+export const updateUserDocument = async (updatedData) => {
+  const updateUserDocFunc = httpsCallable(functions, 'updateUserDocument');
+  try {
+    const response = await updateUserDocFunc({ updatedData });
+    if (response.data.success) {
+      console.log("User document updated successfully");
+    } else {
+      throw new Error("Failed to update document");
+    }
+  } catch (error) {
+    console.error("Error updating user document:", error);
+    Alert.alert("Error", "Failed to update profile.");
+  }
+};
+
+export const uploadPhoto = async (base64Image, userId, isPrivate = false) => {
+  const functions = getFunctions();
+  const uploadPhotoFunc = httpsCallable(functions, 'uploadPhoto');
+
+  try {
+    const response = await uploadPhotoFunc({ base64Image, userId, isPrivate });
+    return response.data.downloadUrl; // Return the photo's public URL
+  } catch (error) {
+    console.error('Error in uploadPhoto:', error);
+    throw error;
+  }
+};
+
+export const deletePhoto = async (userId, photoUrl, isPrivate) => {
+  const deletePhotoFunc = httpsCallable(functions, 'deletePhoto');
+  
+  try {
+    // Extract the path and ensure it's relative to the bucket
+    const url = new URL(photoUrl);
+    const bucketName = 'aere-react-native.appspot.com';
+    let path = decodeURIComponent(url.pathname.replace(/^\/+/, '')); // Remove any leading slashes
+
+    // Remove the bucket name from the path if present
+    if (path.startsWith(`${bucketName}/`)) {
+      path = path.replace(`${bucketName}/`, '');
+    }
+
+    console.log('Final cleaned photo path:', path);  // Debugging log to verify path format
+
+    // Call the Firebase Function with the cleaned path
+    const response = await deletePhotoFunc({ userId, photoPath: path, isPrivate });
+    return response.data;
+  } catch (error) {
+    console.error('Error in deletePhoto:', error);
+    throw error;
+  }
+};
+

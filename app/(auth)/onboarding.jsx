@@ -14,34 +14,14 @@ const { width } = Dimensions.get('window');
 
 // Onboarding pages data
 const onboardingPages = [
-  {
-    id: '1',
-    title: 'Enter Your Name',
-  },
-  {
-    id: '2',
-    title: 'Enter Your Birthdate',
-  },
-  {
-    id: '3',
-    title: 'Select Your Gender',
-  },
-  {
-    id: '4',
-    title: 'What are you living with?',
-  },
-  {
-    id: '5',
-    title: 'Enter Your Bio',
-  },
-  {
-    id: '6',
-    title: 'Upload Your Photos',
-  },
-  {
-    id: '7',
-    title: 'Set Your Location',
-  },
+  { id: '1', title: 'Enter Your Name' },
+  { id: '2', title: 'Enter Your Birthdate' },
+  { id: '3', title: 'Select Your Gender' },
+  { id: '4', title: 'Interested In' },  // New page for selecting interested gender
+  { id: '5', title: 'What are you living with?' },
+  { id: '6', title: 'Enter Your Bio' },
+  { id: '7', title: 'Upload Your Photos' },
+  { id: '8', title: 'Set Your Location' },
 ];
 
 const Onboarding = () => {
@@ -66,6 +46,12 @@ const Onboarding = () => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });  // Default region for the map
+  // New state to track "Interested In" selection
+  const [interested, setInterested] = useState({
+    male: false,
+    female: false,
+    nonBinary: false,
+  });
 
   useEffect(() => {
     (async () => {
@@ -124,19 +110,23 @@ const Onboarding = () => {
       Alert.alert('Error', 'Please select your gender');
       return;
     }
-    if (currentPage === 3 && livingWith.length === 0) {
+    if (currentPage === 3 && !Object.values(interested).some(Boolean)) {
+      Alert.alert('Error', 'Please select at least one option for who you are interested in');
+      return;
+    }
+    if (currentPage === 4 && livingWith.length === 0) {
       Alert.alert('Error', 'Please select what you are living with');
       return;
     }
-    if (currentPage === 4 && !bio.trim()) {
+    if (currentPage === 5 && !bio.trim()) {
       Alert.alert('Error', 'Please enter your bio');
       return;
     }
-    if (currentPage === 5 && photos.length === 0) {
+    if (currentPage === 6 && photos.length === 0) {
       Alert.alert('Error', 'Please upload at least one photo');
       return;
     }
-    if (currentPage === 6 && !location) {
+    if (currentPage === 7 && !location) {
       Alert.alert('Error', 'Please set your location');
       return;
     }
@@ -152,6 +142,11 @@ const Onboarding = () => {
       await saveUserData();  // Final page, save user data
     }
   };  
+
+  // Handler to toggle "Interested In" selections
+  const toggleInterest = (gender) => {
+    setInterested((prev) => ({ ...prev, [gender]: !prev[gender] }));
+  };
 
   // Function to pick multiple photos (up to 6)
   const pickPhotos = async () => {
@@ -229,6 +224,8 @@ const Onboarding = () => {
 
     const age = calculateAge(day, month, year);  // Calculate age
 
+    const interestedGenders = Object.keys(interested).filter(gender => interested[gender]);
+
     try {
       // Upload all photos to Firebase Storage and get their URLs
       const photoUrls = [];
@@ -255,6 +252,7 @@ const Onboarding = () => {
         receivedLikes: [],
         receivedDeclines: [],
         matches: [],
+        interested: interestedGenders,
         privatePhotos: [],
         privateRequests: [],
         privateAccepted: [],
@@ -343,6 +341,29 @@ const Onboarding = () => {
       return (
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
+          <View style={styles.interestedContainer}>
+            <TouchableOpacity onPress={() => toggleInterest('Male')}>
+              <Text style={styles.checkboxOption}>
+                {interested.male ? '✓ Male' : 'Male'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => toggleInterest('Female')}>
+              <Text style={styles.checkboxOption}>
+                {interested.female ? '✓ Female' : 'Female'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => toggleInterest('Non-Binary')}>
+              <Text style={styles.checkboxOption}>
+                {interested.nonBinary ? '✓ Non-Binary' : 'Non-Binary'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    } else if (item.id === '5') {
+      return (
+        <View style={[styles.page, { width }]}>
+          <Text style={styles.title}>{item.title}</Text>
           <View style={styles.livingWithContainer}>
             <TouchableOpacity onPress={() => setLivingWith('HSV1-O')}>
               <Text style={styles.livingWithOption}>{livingWith === 'HSV1-O' ? '✓ HSV1-O' : 'HSV1-O'}</Text>
@@ -356,7 +377,7 @@ const Onboarding = () => {
           </View>
         </View>
       );
-    } else if (item.id === '5') {
+    } else if (item.id === '6') {
       return (
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
@@ -370,7 +391,7 @@ const Onboarding = () => {
           />
         </View>
       );
-    } else if (item.id === '6') {
+    } else if (item.id === '7') {
       return (
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
@@ -396,7 +417,7 @@ const Onboarding = () => {
           </ScrollView>
         </View>
       );
-    } else if (item.id === '7') {
+    } else if (item.id === '8') {
         return (
             <View style={[styles.page, { width }]}>
               <Text style={styles.title}>{item.title}</Text>
@@ -576,6 +597,17 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: '#fff',
     fontSize: 12,
+  },
+  interestedContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    width: '80%',
+    marginTop: 20,
+  },
+  checkboxOption: {
+    fontSize: 18,
+    color: '#fff',
+    marginVertical: 10,
   },
 });
 

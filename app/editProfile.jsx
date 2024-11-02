@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image,
 import { FIREBASE_AUTH, FIREBASE_DB, FIREBASE_STORAGE } from '../firebaseConfig'; // Firestore and Firebase Auth config
 import { updateDoc, doc, getDoc } from 'firebase/firestore'; // Firestore functions
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import uuid from 'react-native-uuid';
 import { useRouter } from 'expo-router';  // Use router for navigation
 import { useNavigation } from '@react-navigation/native';  // Use navigation hook
 import * as ImagePicker from 'expo-image-picker'; // Import ImagePicker to allow selecting images
@@ -10,7 +11,7 @@ import { MaterialIndicator } from 'react-native-indicators';  // Import Activity
 import { CheckBox } from 'react-native-elements';  // Import CheckBox from react-native-elements
 import { Ionicons } from '@expo/vector-icons';  // Icon library for back button
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker
-import { fetchUserData } from '../firebaseActions';  // Import the function to fetch data selectively
+import { fetchUserData, updateUserDocument, uploadPhoto, deletePhoto } from '../firebaseActions';  // Import the function to fetch data selectively
 
 const EditProfile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -66,17 +67,6 @@ const EditProfile = () => {
     fetchProfileData();
   }, []);
 
-  // Function to update the user document in Firestore
-  const updateUserDoc = async (updatedData) => {
-    try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      await updateDoc(userDocRef, updatedData);
-    } catch (error) {
-      console.error('Error updating user document:', error);
-      Alert.alert('Error', 'Failed to update the user data.');
-    }
-  };
-
   // Handle photo upload (generalized for both public and private photos)
   const handleUploadPhoto = async (index, isPrivate = false) => {
     try {
@@ -85,95 +75,101 @@ const EditProfile = () => {
         Alert.alert("Permission to access camera roll is required!");
         return;
       }
-
+  
       const pickerResult = await ImagePicker.launchImageLibraryAsync({
         allowsMultipleSelection: false,
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 1,
       });
-
+  
       if (!pickerResult.canceled) {
-        // Set the uploading index based on whether it's a regular or private photo
-        if (isPrivate) {
-          setUploadingPrivateIndex(index);
-        } else {
-          setUploadingRegularIndex(index);
-        }
-
-        const response = await fetch(pickerResult.assets[0].uri);
+        const uri = pickerResult.assets[0].uri;
+  
+        // Convert image to base64
+        const response = await fetch(uri);
         const blob = await response.blob();
-
-        const photoRef = ref(FIREBASE_STORAGE, `users/${currentUser.uid}/photo-${Date.now()}`);
-        await uploadBytes(photoRef, blob);
-        const downloadUrl = await getDownloadURL(photoRef);
-
+        const base64Image = await blobToBase64(blob);
+  
+        // Upload via Firebase Function
+        const downloadUrl = await uploadPhoto(base64Image, currentUser.uid, isPrivate);
+  
+        // Update state and Firestore with the download URL
         if (isPrivate) {
           const updatedPrivatePhotos = [...privatePhotos];
           updatedPrivatePhotos[index] = downloadUrl;
           setPrivatePhotos(updatedPrivatePhotos);
-
-          // Save to Firestore
-          await updateDoc(doc(FIREBASE_DB, 'users', currentUser.uid), {
-            privatePhotos: updatedPrivatePhotos,
-          });
+          await updateUserDocument({ privatePhotos: updatedPrivatePhotos });
         } else {
           const updatedPhotos = [...photos];
           updatedPhotos[index] = downloadUrl;
           setPhotos(updatedPhotos);
-
-          // Save to Firestore
-          await updateDoc(doc(FIREBASE_DB, 'users', currentUser.uid), {
-            photos: updatedPhotos,
-          });
+          await updateUserDocument({ photos: updatedPhotos });
         }
       }
     } catch (error) {
       console.error('Error uploading photo:', error);
       Alert.alert('Error', 'Failed to upload photo. Please try again later.');
-    } finally {
-      // Reset the uploading index after the photo is uploaded
-      setUploadingPrivateIndex(null);
-      setUploadingRegularIndex(null);
     }
+  };
+  
+  // Helper to convert Blob to Base64
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]); // Get only the base64 string
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   // Function to handle deleting a photo
   const handleDeletePhoto = async (index, isPrivate = false) => {
-    const updatedPhotos = isPrivate ? [...privatePhotos] : [...photos];
-    updatedPhotos.splice(index, 1);  // Remove the photo at the specified index
-
-    if (isPrivate) {
-      setPrivatePhotos(updatedPhotos);
-      await updateDoc(doc(FIREBASE_DB, 'users', currentUser.uid), { privatePhotos: updatedPhotos });
-    } else {
-      setPhotos(updatedPhotos);
-      await updateDoc(doc(FIREBASE_DB, 'users', currentUser.uid), { photos: updatedPhotos });
+    try {
+      const photoUrl = isPrivate ? privatePhotos[index] : photos[index];
+      const updatedPhotos = isPrivate ? [...privatePhotos] : [...photos];
+  
+      console.log('photo URL is', photoUrl);
+      // Call the deletePhoto function via Firebase Functions
+      await deletePhoto(currentUser.uid, photoUrl, isPrivate);
+  
+      // Update local state after successful deletion
+      updatedPhotos.splice(index, 1);
+      if (isPrivate) {
+        setPrivatePhotos(updatedPhotos);
+      } else {
+        setPhotos(updatedPhotos);
+      }
+      } catch (error) {
+      console.error('Error deleting photo:', error);
+      Alert.alert('Error', 'Failed to delete photo.');
     }
   };
 
   // Ensure at least one gender option is always selected
   const handleGenderChange = (selectedGender) => {
     setGender(selectedGender);
-    updateUserDoc({ gender: selectedGender }); // Update Firestore
+    updateUserDocument({ gender: selectedGender }); // Update Firestore
   };
 
   // Handle Living With selection change
   const handleLivingWithChange = (condition) => {
     const updatedLivingWith = { ...livingWith, [condition]: !livingWith[condition] };
     setLivingWith(updatedLivingWith);
-    updateUserDoc({ livingWith: updatedLivingWith }); // Update Firestore
+    updateUserDocument({ livingWith: updatedLivingWith }); // Update Firestore
   };
 
   // Save profile
     const handleSaveProfile = async () => {
         setIsSaving(true);
         try {
-        const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-        await updateDoc(userDocRef, {
+        //const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
+        await updateUserDocument({
             name,
             bio,
             photos,
             privatePhotos,
+            gender,
+            livingWith,
         });
         } catch (error) {
         console.error('Error updating profile:', error);
