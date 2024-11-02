@@ -6,6 +6,7 @@ import { doc, updateDoc, onSnapshot, arrayUnion } from 'firebase/firestore';  //
 import { Timestamp } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons'; // Icon for the back button
 import { useNavigation } from '@react-navigation/native';  // Use navigation hook
+import { sendMessage as sendMessageAction } from '../firebaseActions'; // Import as sendMessageAction
 
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
@@ -41,26 +42,15 @@ const Chat = () => {
   }, [matchDocRef]);
 
   // Function to send a message
-  const sendMessage = async () => {
+  const sendMessageHandler = async () => {
     if (!messageText.trim()) return;
 
-    const newMessage = {
-      datetime: Timestamp.now(),
-      message: messageText,
-      senderID: currentUserId,
-      receiverID: matchId,  // Assuming receiver is identified by matchId (adjust based on your schema)
-    };
-
     try {
-      await updateDoc(matchDocRef, {
-        messages: arrayUnion(newMessage),  // Add the new message to the messages array
-        messagePreview: messageText,
-        lastMessage: Timestamp.now(),
-      });
-
+      await sendMessageAction(matchId, messageText, currentUserId, matchId);  // Call the function
       setMessageText('');  // Clear the text input
     } catch (error) {
       console.error('Error sending message:', error);
+      Alert.alert("Error", "Failed to send message. Please try again.");
     }
   };
 
@@ -140,7 +130,7 @@ const Chat = () => {
           onChangeText={setMessageText}
           placeholderTextColor="#888"
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessageHandler}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>

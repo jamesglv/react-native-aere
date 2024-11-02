@@ -5,10 +5,35 @@ const fetch = require('node-fetch');
 admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
+const { getStorage } = require('firebase-admin/storage');
+const { Buffer } = require('buffer');
 
 //
 // ONBOARDING FUNCTIONS
 //
+
+exports.createUserDocument = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to create a user document.'
+    );
+  }
+
+  const { userId, email, createdAt } = data;
+
+  try {
+    await db.collection('users').doc(userId).set({
+      email,
+      createdAt,
+      // Additional fields can be added here
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating user document:", error);
+    throw new functions.https.HttpsError('internal', 'Failed to create user document');
+  }
+});
 
 // Function to save user profile data
 exports.saveUserProfile = functions.https.onCall(async (data, context) => {
@@ -41,46 +66,39 @@ exports.saveUserProfile = functions.https.onCall(async (data, context) => {
 
 // Function to upload user photo
 exports.uploadUserPhoto = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to upload photos.');
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to upload photos.');
   }
-  const { base64Photo, userId, isPrivate } = data;
+
+  const { base64Image, userId, isPrivate } = data;
+
+  // Validate required parameters
+  if (!base64Image || !userId) {
+      throw new functions.https.HttpsError('invalid-argument', 'Image data and user ID are required.');
+  }
+
+  const bucket = admin.storage().bucket(); // Get the default storage bucket
+  const filename = `users/${userId}/${isPrivate ? 'private' : 'public'}/photo-${uuidv4()}.jpg`;
+  const file = bucket.file(filename);
 
   try {
-    const uniqueId = uuid.v4();
-    const folder = isPrivate ? 'private' : 'public';
-    const filePath = `users/${userId}/${folder}/photo-${uniqueId}.jpg`;
+      // Decode the base64 image to a buffer
+      const buffer = Buffer.from(base64Image, 'base64');
 
-    // Convert the base64 string back to binary and upload
-    const buffer = Buffer.from(base64Photo, 'base64');
-    const file = storage.file(filePath);
-    await file.save(buffer, { contentType: 'image/jpeg' });
+      // Save the image to Firebase Storage
+      await file.save(buffer, {
+          metadata: { contentType: 'image/jpeg' },
+      });
 
-    const downloadUrl = await file.getSignedUrl({ action: 'read', expires: '03-17-2025' });
-    return { downloadUrl: downloadUrl[0] };
+      // Make the file publicly accessible, if required
+      await file.makePublic();
+
+      // Return the public URL of the uploaded image
+      return { downloadUrl: file.publicUrl() };
   } catch (error) {
-    console.error("Error uploading photo:", error);
-    throw new functions.https.HttpsError('internal', 'Failed to upload photo');
-  }
-});
-
-// Function to calculate age based on birthdate
-exports.calculateUserAge = functions.https.onCall(async (data, context) => {
-  const { birthDay, birthMonth, birthYear } = data;
-
-  try {
-    const today = new Date();
-    const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return { age };
-  } catch (error) {
-    console.error("Error calculating age:", error);
-    throw new functions.https.HttpsError('internal', 'Failed to calculate age');
+      console.error('Error uploading photo:', error);
+      throw new functions.https.HttpsError('internal', 'Failed to upload photo');
   }
 });
 
@@ -601,5 +619,41 @@ exports.deletePhoto = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Error deleting photo:', error);
     throw new functions.https.HttpsError('internal', 'Failed to delete photo.');
+  }
+});
+
+//
+// CHAT FUNCTIONS
+//
+
+exports.sendMessage = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to send a message.');
+  }
+
+  const { matchId, messageText, senderID, receiverID } = data;
+  
+  if (!matchId || !messageText || !senderID || !receiverID) {
+    throw new functions.https.HttpsError('invalid-argument', 'All fields are required.');
+  }
+
+  const newMessage = {
+    datetime: admin.firestore.Timestamp.now(),
+    message: messageText,
+    senderID,
+    receiverID,
+  };
+
+  try {
+    await db.collection('matches').doc(matchId).update({
+      messages: admin.firestore.FieldValue.arrayUnion(newMessage),
+      messagePreview: messageText,
+      lastMessage: admin.firestore.Timestamp.now(),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending message:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to send message');
   }
 });

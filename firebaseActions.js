@@ -6,6 +6,28 @@ import { Alert } from 'react-native';
 const functions = getFunctions();
 
 //
+// SIGN UP
+//
+
+export const createUserDocument = async (userId, email) => {
+  const createUserDocFunc = httpsCallable(functions, 'createUserDocument');
+  try {
+    const response = await createUserDocFunc({
+      userId,
+      email,
+      createdAt: new Date().toISOString(),
+      // Add other fields if necessary
+    });
+    if (!response.data.success) {
+      throw new Error('Failed to create user document');
+    }
+  } catch (error) {
+    console.error("Error creating user document:", error);
+    throw error;
+  }
+};
+
+//
 // ONBOARDING FUNCTIONS
 //
 
@@ -24,25 +46,14 @@ export const saveUserProfile = async (userData) => {
   }
 };
 
-export const uploadUserPhoto = async (base64Photo, userId, isPrivate = false) => {
+export const uploadUserPhoto = async (base64Image, userId, isPrivate) => {
   const uploadUserPhotoFunc = httpsCallable(functions, 'uploadUserPhoto');
   try {
-    const response = await uploadUserPhotoFunc({ base64Photo, userId, isPrivate });
-    return response.data.downloadUrl;
+      const response = await uploadUserPhotoFunc({ base64Image, userId, isPrivate });
+      return response.data.downloadUrl; // Return the download URL
   } catch (error) {
-    console.error("Error uploading photo:", error);
-    throw error;
-  }
-};
-
-export const calculateUserAge = async (birthDay, birthMonth, birthYear) => {
-  const calculateUserAgeFunc = httpsCallable(functions, 'calculateUserAge');
-  try {
-    const response = await calculateUserAgeFunc({ birthDay, birthMonth, birthYear });
-    return response.data.age;
-  } catch (error) {
-    console.error("Error calculating user age:", error);
-    throw error;
+      console.error('Error in uploadUserPhoto:', error);
+      throw error;
   }
 };
 
@@ -281,3 +292,24 @@ export const deletePhoto = async (userId, photoUrl, isPrivate) => {
   }
 };
 
+//
+// CHAT FUNCTIONS
+//
+
+export const sendMessage = async (matchId, messageText, senderID, receiverID) => {
+  const sendMessageFunc = httpsCallable(functions, 'sendMessage');
+  try {
+    const response = await sendMessageFunc({
+      matchId,
+      messageText,
+      senderID,
+      receiverID,
+    });
+    if (!response.data.success) {
+      throw new Error('Failed to send message');
+    }
+  } catch (error) {
+    console.error("Error sending message:", error);
+    throw error;
+  }
+};

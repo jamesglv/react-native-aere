@@ -3,18 +3,15 @@ import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FormField from '../../components/FormField';
 import { Link, useRouter } from 'expo-router';
-
 import { images } from '../../constants';
 import CustomButton from '../../components/CustomButton';
-// Import Firebase functions
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { FIREBASE_AUTH, FIREBASE_DB } from '../../firebaseConfig';  // Make sure this path is correct
-import { doc, setDoc } from 'firebase/firestore'; // Firestore functions
+import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { createUserDocument } from '../../firebaseActions';  // Import from firebaseActions
 
 const SignUp = () => {
-  const router = useRouter(); // Use router for navigation
+  const router = useRouter();
   const [form, setForm] = useState({
-    username: '',
     email: '',
     password: ''
   });
@@ -22,7 +19,7 @@ const SignUp = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
-    if (!form.username || !form.email || !form.password) {
+    if (!form.email || !form.password) {
       Alert.alert("Error", "Please make sure all fields are complete.");
       return;
     }
@@ -37,15 +34,10 @@ const SignUp = () => {
         form.password
       );
 
-      const user = userCredential.user;  // Firebase Auth user object
+      const user = userCredential.user;
 
-      // Firestore: Create user document with the same ID as the Auth user ID (uid)
-      await setDoc(doc(FIREBASE_DB, 'users', user.uid), {
-        username: form.username,
-        email: form.email,
-        createdAt: new Date().toISOString(),
-        // Add more fields as necessary
-      });
+      // Use the firebaseActions function to create the user document
+      await createUserDocument(user.uid, form.email);
 
       // Navigate to the home screen after successful sign-up
       router.replace('/onboarding');
@@ -60,24 +52,14 @@ const SignUp = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className='w-full justify-center h-full px-4 my-6'>
-          
           <Image 
             source={images.logo}
             resizeMode='contain'
             className='w-[115px] h-[35px]'
           />
-
           <Text className='text-2xl text-white text-semibold mt-10 font-psemibold'>
             Sign Up to Aora
           </Text>
-
-          <FormField 
-            title='Name'
-            value={form.username}
-            handleChangeText={(e) => setForm({...form, username: e})}
-            otherStyles='mt-7'
-          />
-
           <FormField 
             title='Email'
             value={form.email}
@@ -85,7 +67,6 @@ const SignUp = () => {
             otherStyles='mt-7'
             keyboardType='email-address'
           />
-
           <FormField 
             title='Password'
             value={form.password}
@@ -94,16 +75,14 @@ const SignUp = () => {
                password: e
               })}
             otherStyles='mt-7'
-            secureTextEntry  // Ensures password is hidden
+            secureTextEntry
           />
-
           <CustomButton 
             title='Sign Up'
             handlePress={submit}
             containerStyles='mt-7'
             isLoading={isSubmitting}
           />
-
           <View className='justify-center pt-5 flex-row gap-2'>
             <Text className='text-lg text-gray-100 font-pregular'>
               Already have an account?
@@ -114,9 +93,7 @@ const SignUp = () => {
             >
               Sign In
             </Link>
-
           </View>
-
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';  // Image Picker
 import MapView, { Marker } from 'react-native-maps';  // Google Maps
 import * as Location from 'expo-location';  // Expo location services
 import uuid from 'react-native-uuid';
+import { saveUserProfile, uploadUserPhoto, calculateUserAge } from '../../firebaseActions';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +36,11 @@ const Onboarding = () => {
   const [month, setMonth] = useState('1');  // Default to January
   const [year, setYear] = useState('2000');  // Default to the year 2000
   const [gender, setGender] = useState('');
-  const [livingWith, setLivingWith] = useState([]);
+  const [livingWith, setLivingWith] = useState({
+    HSV1G: false,
+    HSV1O: false,
+    HSV2O: false,
+  });
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState([]);  // Array to store selected photos (max 6)
   const [isUploading, setIsUploading] = useState(false);  // Track upload state
@@ -82,7 +87,7 @@ const Onboarding = () => {
     const birthDate = new Date(birthYear, birthMonth - 1, birthDay); // Months are zero-indexed
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-
+  
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
@@ -146,6 +151,13 @@ const Onboarding = () => {
   // Handler to toggle "Interested In" selections
   const toggleInterest = (gender) => {
     setInterested((prev) => ({ ...prev, [gender]: !prev[gender] }));
+  };
+
+  const toggleLivingWith = (condition) => {
+    setLivingWith((prevState) => ({
+      ...prevState,
+      [condition]: !prevState[condition],
+    }));
   };
 
   // Function to pick multiple photos (up to 6)
@@ -221,51 +233,51 @@ const Onboarding = () => {
       Alert.alert('Error', 'User not authenticated');
       return;
     }
-
-    const age = calculateAge(day, month, year);  // Calculate age
-
+  
     const interestedGenders = Object.keys(interested).filter(gender => interested[gender]);
-
+    const age = calculateAge(day, month, year);
     try {
-      // Upload all photos to Firebase Storage and get their URLs
+  
+      // Upload photos and get URLs
       const photoUrls = [];
       for (let i = 0; i < photos.length; i++) {
-        const photoUrl = await uploadPhoto(photos[i].uri, user.uid, i);
+        const uri = photos[i].uri;
+        const base64Image = await convertImageToBase64(uri);
+        const photoUrl = await uploadUserPhoto(base64Image, user.uid, false);
         photoUrls.push(photoUrl);
       }
-
-      // Save user data to Firestore
-      await setDoc(doc(FIREBASE_DB, 'users', user.uid), {
-        name: name,
-        birthdate: {
-          day: day,
-          month: month,
-          year: year,
-        },
-        age: age,
-        gender: gender,
-        bio: bio,
-        photos: photoUrls,  // Save photo URLs
-        location: location,  // Save user location
-        likedUsers: [],
-        declinedUsers: [],
-        receivedLikes: [],
-        receivedDeclines: [],
-        matches: [],
+  
+      // Call Firebase function to save user data
+      await saveUserProfile({
+        name,
+        birthdate: { day, month, year },
+        age,
+        gender,
+        bio,
+        photos: photoUrls,
+        location,
         interested: interestedGenders,
-        privatePhotos: [],
-        privateRequests: [],
-        privateAccepted: [],
+        livingWith,
         onboardingCompleted: true,
-        livingWith: livingWith,
         paused: false,
-      }, { merge: true });  // Merge to avoid overwriting existing fields
-
-      // Navigate to home after onboarding is complete
+      });
+  
       router.replace('/home');
     } catch (error) {
       Alert.alert('Error saving user data', error.message);
     }
+  };
+  
+  // Helper to convert image to base64
+  const convertImageToBase64 = async (uri) => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]); // Get the base64 string
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   // Render the content for each page
@@ -365,14 +377,14 @@ const Onboarding = () => {
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
           <View style={styles.livingWithContainer}>
-            <TouchableOpacity onPress={() => setLivingWith('HSV1-O')}>
-              <Text style={styles.livingWithOption}>{livingWith === 'HSV1-O' ? '✓ HSV1-O' : 'HSV1-O'}</Text>
+            <TouchableOpacity onPress={() => toggleLivingWith('HSV1G')}>
+              <Text style={styles.livingWithOption}>{livingWith.HSV1G ? '✓ HSV1-G' : 'HSV1-G'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setLivingWith('HSV1-G')}>
-              <Text style={styles.livingWithOption}>{livingWith === 'HSV1-G' ? '✓ HSV1-G' : 'HSV1-G'}</Text>
+            <TouchableOpacity onPress={() => toggleLivingWith('HSV1O')}>
+              <Text style={styles.livingWithOption}>{livingWith.HSV1O ? '✓ HSV1-O' : 'HSV1-O'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setLivingWith('HSV2-O')}>
-              <Text style={styles.livingWithOption}>{livingWith === 'HSV2-O' ? '✓ HSV2-O' : 'HSV2-O'}</Text>
+            <TouchableOpacity onPress={() => toggleLivingWith('HSV2O')}>
+              <Text style={styles.livingWithOption}>{livingWith.HSV2O ? '✓ HSV2-O' : 'HSV2-O'}</Text>
             </TouchableOpacity>
           </View>
         </View>
