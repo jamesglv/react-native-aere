@@ -47,9 +47,9 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
 
       {/* Profile Text */}
       <View style={styles.textContainer}>
-        <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+        <Text className='font-obold' style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
         {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (
-          <Text style={styles.livingWith}>
+          <Text className='font-oregular' style={styles.livingWith}>
             {profile.livingWith.join(', ')}
           </Text>
         )}

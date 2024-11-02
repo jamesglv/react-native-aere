@@ -17,6 +17,8 @@ const RootLayout = () => {
     "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
     "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
+    "OptimaLTPro-Roman": require("../assets/fonts/OptimaLTPro-Roman.otf"),
+    "OptimaLTPro-Medium": require("../assets/fonts/OptimaLTPro-Medium.otf"),
   })
 
   useEffect(() => {
