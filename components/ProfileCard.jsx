@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faHeart } from '@fortawesome/free-solid-svg-icons/faHeart';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,8 +48,12 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
       {/* Profile Text */}
       <View style={styles.textContainer}>
         <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+        {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (
+          <Text style={styles.livingWith}>
+            {profile.livingWith.join(', ')}
+          </Text>
+        )}
         <Text style={styles.bio}>{profile.bio}</Text>
-
         {/* Private Album */}
         <View style={styles.privateAlbumContainer}>
           <Text style={styles.albumTitle}>Private Album</Text>
@@ -69,7 +75,7 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.likeButton} onPress={() => handleLike(profile.id)}>
-            <Ionicons name="heart" size={30} color="black" />
+            <FontAwesomeIcon icon={faHeart} size={30} color="black" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(profile.id)}>
             <Ionicons name="close" size={30} color="black" />
@@ -131,6 +137,7 @@ const styles = StyleSheet.create({
   actionButtons: { position: 'absolute', right: 20, top: height / 2 - 600, alignItems: 'center', height: 130, justifyContent: 'space-between' },
   likeButton: { backgroundColor: '#fff', padding: 23, marginBottom: 25, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
   declineButton: { backgroundColor: '#fff', padding: 15, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
+  livingWith: { fontSize: 18, paddingBottom: 10},
 
   // Modal styles
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },

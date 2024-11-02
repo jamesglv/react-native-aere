@@ -1,23 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, Image, Animated } from 'react-native'
-import { Tabs, Redirect } from 'expo-router';
-import { icons } from '../../constants'
-;
-const TabIcon = ({ icon, color, name, focused }) => {
-  return (
-    <View className='items-center justify-center gap-2'>
-      <Image 
-        source={icon}
-        resizeMode="contain"
-        tintColor={color}
-        className="w-6 h-6"
-      />
-      <Text className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs`} style={{ color: color }}>
-        {name}
-      </Text>
-    </View>
-  )
-}
+import React from 'react';
+import { View, Image } from 'react-native';
+import { Tabs } from 'expo-router';
+import { icons } from '../../constants';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faComments } from '@fortawesome/free-solid-svg-icons/faComments';
+import { faHouse } from '@fortawesome/free-solid-svg-icons/faHouse';
+import { faHeart } from '@fortawesome/free-solid-svg-icons/faHeart';
+import { faUser } from '@fortawesome/free-solid-svg-icons/faUser';
+
 
 const TabsLayout = () => {
   return (
@@ -25,13 +15,13 @@ const TabsLayout = () => {
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
-          tabBarActiveTintColor: '#ffa001',
-          tabBarInactiveTintColor: '#CDCDE0',
+          tabBarActiveTintColor: 'white',
+          tabBarInactiveTintColor: '#6a6a6a',
           tabBarStyle: {
-            backgroundColor: "#161622",
+            backgroundColor: "black",
             borderTopWidth: 1,
             borderTopColor: '#232533',
-            height: 84,
+            height: 100,
           }
         }}
       >
@@ -40,13 +30,8 @@ const TabsLayout = () => {
           options={{
             title: 'Home',
             headerShown: false,
-            tabBarIcon: ({ color, focused}) => (
-              <TabIcon 
-                icon={icons.home}
-                color={color}
-                name="Home"
-                focused={focused}
-              />
+            tabBarIcon: ({ color, focused }) => (
+              <FontAwesomeIcon icon={faHouse} size={32} color={color} />
             )
           }}
         />
@@ -55,13 +40,9 @@ const TabsLayout = () => {
           options={{
             title: 'Matches',
             headerShown: false,
-            tabBarIcon: ({ color, focused}) => (
-              <TabIcon 
-                icon={icons.bookmark}
-                color={color}
-                name="Matches"
-                focused={focused}
-              />
+            tabBarIcon: ({ color, focused }) => (
+              <FontAwesomeIcon icon={faComments} size={36} color={color} />
+
             )
           }}
         />
@@ -70,13 +51,8 @@ const TabsLayout = () => {
           options={{
             title: 'Likes',
             headerShown: false,
-            tabBarIcon: ({ color, focused}) => (
-              <TabIcon 
-                icon={icons.plus}
-                color={color}
-                name="Likes"
-                focused={focused}
-              />
+            tabBarIcon: ({ color, focused }) => (
+              <FontAwesomeIcon icon={faHeart} size={28} color={color} />
             )
           }}
         />
@@ -85,19 +61,15 @@ const TabsLayout = () => {
           options={{
             title: 'Profile',
             headerShown: false,
-            tabBarIcon: ({ color, focused}) => (
-              <TabIcon 
-                icon={icons.profile}
-                color={color}
-                name="Profile"
-                focused={focused}
-              />
+            tabBarIcon: ({ color, focused }) => (
+              <FontAwesomeIcon icon={faUser} size={28} color={color} />
+
             )
           }}
         />
       </Tabs>
     </>
-  )
-}
+  );
+};
 
-export default TabsLayout
+export default TabsLayout;

@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';  // Use navigation hook
 import { Ionicons } from '@expo/vector-icons';  // Icon library for back button
 import { TransitionPresets } from '@react-navigation/stack'; // Import Transition Presets
+import { fetchUserData, updateUserDocument } from '../firebaseActions'; // Import the fetchUserData function
+import { fetchUserNamesAndPhotos as fetchUserNamesAndPhotosAction } from '../firebaseActions'; // Import the new action
 
 const PrivateRequests = () => {
   const [requests, setRequests] = useState([]); // List of private access requests
@@ -27,25 +29,20 @@ const PrivateRequests = () => {
   // Function to fetch private requests and accepted users
   const fetchPrivateRequests = async () => {
     if (!currentUser) return;
-
+  
     try {
       setIsLoading(true); // Start loading
-
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      const userSnapshot = await getDoc(userDocRef);
-
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        const privateRequests = userData.privateRequests || [];
-        const privateAccepted = userData.privateAccepted || [];
-
-        await fetchUserNamesAndPhotos([...privateRequests, ...privateAccepted]);
-
-        setRequests(privateRequests);
-        setAccepted(privateAccepted);
-      } else {
-        Alert.alert('Error', 'User data not found.');
-      }
+  
+      const fields = ['privateRequests', 'privateAccepted'];
+      const userData = await fetchUserData(fields);
+  
+      const privateRequests = userData.privateRequests || [];
+      const privateAccepted = userData.privateAccepted || [];
+  
+      await fetchUserNamesAndPhotos([...privateRequests, ...privateAccepted]);
+  
+      setRequests(privateRequests);
+      setAccepted(privateAccepted);
     } catch (error) {
       console.error('Error fetching private requests:', error);
       Alert.alert('Error', 'Failed to load private requests.');
@@ -56,34 +53,13 @@ const PrivateRequests = () => {
 
   // Function to fetch user names and photos from Firestore based on their UID
   const fetchUserNamesAndPhotos = async (uids) => {
-    const userDetailsTemp = { ...userDetails };
-    const uniqueUids = [...new Set(uids)];
-
     try {
-      await Promise.all(
-        uniqueUids.map(async (uid) => {
-          if (!userDetailsTemp[uid]) {
-            const userDocRef = doc(FIREBASE_DB, 'users', uid);
-            const userSnapshot = await getDoc(userDocRef);
-
-            if (userSnapshot.exists()) {
-              const userData = userSnapshot.data();
-              const photos = userData.photos[0] || 'https://placekitten.com/200/200'; // Fallback photo
-              userDetailsTemp[uid] = {
-                name: userData.name || 'Unknown User', 
-                photos,  // Store the first photo in the user details
-              };
-            } else {
-              console.warn(`No user document found for UID: ${uid}`);
-            }
-          }
-        })
-      );
+      const userDetailsData = await fetchUserNamesAndPhotosAction(uids); // Call Firebase function
+      setUserDetails(userDetailsData); // Update state with the fetched data
     } catch (error) {
       console.error("Error fetching user names and photos:", error);
+      Alert.alert("Error", "Failed to load user details.");
     }
-
-    setUserDetails(userDetailsTemp);
   };
 
   useEffect(() => {
@@ -93,12 +69,13 @@ const PrivateRequests = () => {
   // Function to accept a request
   const handleAccept = async (userId) => {
     try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      await updateDoc(userDocRef, {
-        privateRequests: arrayRemove(userId), // Remove from requests
-        privateAccepted: arrayUnion(userId),  // Add to accepted
-      });
-
+      const updatedData = {
+        privateRequests: admin.firestore.FieldValue.arrayRemove(userId), // Remove from requests
+        privateAccepted: admin.firestore.FieldValue.arrayUnion(userId),  // Add to accepted
+      };
+  
+      await updateUserDocument(updatedData);
+  
       setRequests((prevRequests) => prevRequests.filter((id) => id !== userId)); // Update UI
       setAccepted((prevAccepted) => [...prevAccepted, userId]);
     } catch (error) {
@@ -110,11 +87,12 @@ const PrivateRequests = () => {
   // Function to delete a request
   const handleDelete = async (userId) => {
     try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      await updateDoc(userDocRef, {
-        privateRequests: arrayRemove(userId), // Remove from requests
-      });
-
+      const updatedData = {
+        privateRequests: admin.firestore.FieldValue.arrayRemove(userId), // Remove from requests
+      };
+  
+      await updateUserDocument(updatedData);
+  
       setRequests((prevRequests) => prevRequests.filter((id) => id !== userId)); // Update UI
     } catch (error) {
       console.error('Error deleting request:', error);
@@ -123,19 +101,20 @@ const PrivateRequests = () => {
   };
 
   // Function to remove an accepted user
-const handleRemove = async (userId) => {
-  try {
-    const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-    await updateDoc(userDocRef, {
-      privateAccepted: arrayRemove(userId),  // Remove the user from accepted requests
-    });
-
-    setAccepted((prevAccepted) => prevAccepted.filter((id) => id !== userId));  // Update UI to remove the user
-  } catch (error) {
-    console.error('Error removing accepted user:', error);
-    Alert.alert('Error', 'Failed to remove the accepted user.');
-  }
-};
+  const handleRemove = async (userId) => {
+    try {
+      const updatedData = {
+        privateAccepted: admin.firestore.FieldValue.arrayRemove(userId),  // Remove the user from accepted requests
+      };
+  
+      await updateUserDocument(updatedData);
+  
+      setAccepted((prevAccepted) => prevAccepted.filter((id) => id !== userId));  // Update UI to remove the user
+    } catch (error) {
+      console.error('Error removing accepted user:', error);
+      Alert.alert('Error', 'Failed to remove the accepted user.');
+    }
+  };
 
   // Navigate to the 'userProfiles.jsx' screen
   const handleProfileClick = (userId) => {

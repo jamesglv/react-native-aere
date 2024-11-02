@@ -9,6 +9,8 @@ import haversine from 'haversine-distance';
 import ProfileCard from '../../components/ProfileCard';
 import FilterModal from '../../components/FilterModal';
 import { fetchUserData, fetchProfiles, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum } from '../../firebaseActions';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
 
 const { width, height } = Dimensions.get('window');
 
@@ -188,7 +190,7 @@ const Home = () => {
         )}
 
         <TouchableOpacity style={styles.settingsButton} onPress={toggleFilterModal}>
-          <Ionicons name="settings-outline" size={30} color="#fff" />
+          <FontAwesomeIcon icon={faSliders} size={20} color="#fff" />
         </TouchableOpacity>
       </SafeAreaView>
     </>
@@ -202,7 +204,7 @@ const styles = StyleSheet.create({
   adjustFiltersButton: { backgroundColor: '#007bff', padding: 10, borderRadius: 20, paddingHorizontal: 20 },
   adjustFiltersButtonText: { color: '#fff', fontSize: 16 },
   profilesCarousel: { alignItems: 'top' },
-  settingsButton: { position: 'absolute', top: 40, right: 20, zIndex: 2, backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: 10, borderRadius: 30 },
+  settingsButton: { position: 'absolute', top: 40, right: 20, zIndex: 2, backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: 15, borderRadius: 40, height: 50, width: 50, marginTop: 10 },
 });
 
 export default Home;

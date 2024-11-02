@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FIREBASE_AUTH, FIREBASE_DB } from '../firebaseConfig';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
+import { fetchUserData, updateUserDocument } from '../firebaseActions'; // Import the fetchUserData function
 
 const LocationUpdate = () => {
   const navigation = useNavigation();
@@ -19,22 +20,18 @@ const LocationUpdate = () => {
     const fetchUserLocation = async () => {
       if (!currentUser) return;
       try {
-        const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        const userData = await fetchUserData(['location']);
         
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.location) {
-            const { latitude, longitude } = userData.location;
-            const initialRegion = {
-              latitude,
-              longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            };
-            setLocation({ latitude, longitude });
-            setRegion(initialRegion);  // Set initial region based on database
-          }
+        if (userData.location) {
+          const { latitude, longitude } = userData.location;
+          const initialRegion = {
+            latitude,
+            longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          };
+          setLocation({ latitude, longitude });
+          setRegion(initialRegion);  // Set initial region based on database
         }
       } catch (error) {
         console.error('Error fetching user location:', error);
@@ -48,11 +45,8 @@ const LocationUpdate = () => {
   const saveLocation = async () => {
     if (!location) return;
     try {
-      await updateDoc(doc(FIREBASE_DB, 'users', currentUser.uid), {
-        location: location,
-      });
+      await updateUserDocument({ location: location }); // Update Firestore using the cloud function
       console.log('Location updated:', location);  // Log updated location
-      //Alert.alert('Location updated successfully!');
       navigation.goBack();  // Go back to the previous screen
     } catch (error) {
       console.error('Error saving location:', error);

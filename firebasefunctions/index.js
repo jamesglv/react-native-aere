@@ -490,7 +490,6 @@ exports.fetchMatches = functions.https.onCall(async (data, context) => {
     }
   
     try {
-      // Fetch the current user's document
       const userDocRef = db.collection('users').doc(userId);
       const userSnapshot = await userDocRef.get();
   
@@ -501,19 +500,17 @@ exports.fetchMatches = functions.https.onCall(async (data, context) => {
       const userData = userSnapshot.data();
       const receivedLikesIds = userData.receivedLikes || [];
   
-      // Fetch profiles of users who liked the current user
       const receivedLikesProfiles = await Promise.all(
         receivedLikesIds.map(async (likeUserId) => {
           const likeUserRef = db.collection('users').doc(likeUserId);
           const likeUserSnapshot = await likeUserRef.get();
-          if (likeUserSnapshot.exists()) {
+          if (likeUserSnapshot.exists) {
             return { id: likeUserId, ...likeUserSnapshot.data() };
           }
           return null;
         })
       );
   
-      // Filter out any null values
       return { receivedLikes: receivedLikesProfiles.filter(profile => profile !== null) };
     } catch (error) {
       console.error("Error fetching received likes:", error);
@@ -655,5 +652,41 @@ exports.sendMessage = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Error sending message:', error);
     throw new functions.https.HttpsError('internal', 'Failed to send message');
+  }
+});
+
+//
+// PRIVATE REQUESTS
+//
+
+exports.fetchUserNamesAndPhotos = functions.https.onCall(async (data, context) => {
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to fetch data.');
+  }
+
+  const { uids } = data;
+  if (!uids || !Array.isArray(uids)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid array of user IDs is required.');
+  }
+
+  try {
+    const userDetails = {};
+    const userDocs = await Promise.all(uids.map(uid => db.collection('users').doc(uid).get()));
+
+    userDocs.forEach(doc => {
+      if (doc.exists) {
+        const userData = doc.data();
+        userDetails[doc.id] = {
+          name: userData.name || 'Unknown User',
+          photos: userData.photos ? userData.photos[0] : 'https://placekitten.com/200/200', // Use first photo or fallback
+        };
+      }
+    });
+
+    return { userDetails };
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to fetch user data');
   }
 });

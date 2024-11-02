@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient 
 import { useRouter } from 'expo-router';  // Import useRouter from expo-router
 import { Switch } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { fetchUserData } from '../../firebaseActions'; // Import fetchUserProfileData function
+import { fetchUserData, updateUserDocument } from '../../firebaseActions'; // Import fetchUserProfileData function
 
 const Profile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -57,14 +57,12 @@ const Profile = () => {
     const newPausedState = !isPaused;
     setIsPaused(newPausedState); // Update the state locally
     try {
-      const userDocRef = doc(FIREBASE_DB, 'users', currentUser.uid);
-      await updateDoc(userDocRef, { paused: newPausedState }); // Update Firestore
+      await updateUserDocument({ paused: newPausedState }); // Update Firestore using the cloud function
     } catch (error) {
       console.error('Error updating pause state:', error);
       Alert.alert('Error', 'Failed to update pause state.');
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

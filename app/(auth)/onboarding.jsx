@@ -36,11 +36,7 @@ const Onboarding = () => {
   const [month, setMonth] = useState('1');  // Default to January
   const [year, setYear] = useState('2000');  // Default to the year 2000
   const [gender, setGender] = useState('');
-  const [livingWith, setLivingWith] = useState({
-    HSV1G: false,
-    HSV1O: false,
-    HSV2O: false,
-  });
+  const [livingWith, setLivingWith] = useState([]);
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState([]);  // Array to store selected photos (max 6)
   const [isUploading, setIsUploading] = useState(false);  // Track upload state
@@ -52,11 +48,11 @@ const Onboarding = () => {
     longitudeDelta: 0.0421,
   });  // Default region for the map
   // New state to track "Interested In" selection
-  const [interested, setInterested] = useState({
+  const [interested, setInterested] = useState([{
     male: false,
     female: false,
     nonBinary: false,
-  });
+  }]);
 
   useEffect(() => {
     (async () => {
@@ -94,12 +90,12 @@ const Onboarding = () => {
     return age;
   };
 
-  // Function to handle scroll and track the current page
-  const handleScroll = (event) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const newPage = Math.floor(scrollPosition / width);
-    setCurrentPage(newPage);  // Update the current page state
-  };
+  //// Function to handle scroll and track the current page
+  // const handleScroll = (event) => {
+  //   const scrollPosition = event.nativeEvent.contentOffset.x;
+  //   const newPage = Math.floor(scrollPosition / width);
+  //   setCurrentPage(newPage);  // Update the current page state
+  // };
 
   const handleNext = async () => {
     // Check validation for each page
@@ -153,11 +149,14 @@ const Onboarding = () => {
     setInterested((prev) => ({ ...prev, [gender]: !prev[gender] }));
   };
 
-  const toggleLivingWith = (condition) => {
-    setLivingWith((prevState) => ({
-      ...prevState,
-      [condition]: !prevState[condition],
-    }));
+  const toggleLivingWith = (option) => {
+    setLivingWith((prevState) => {
+      if (prevState.includes(option)) {
+        return prevState.filter((item) => item !== option);
+      } else {
+        return [...prevState, option];
+      }
+    });
   };
 
   // Function to pick multiple photos (up to 6)

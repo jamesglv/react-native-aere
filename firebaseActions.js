@@ -229,9 +229,13 @@ export const fetchMatches = async () => {
     if (!currentUserId) throw new Error("User not logged in");
   
     const fetchReceivedLikesFunction = httpsCallable(functions, 'fetchReceivedLikes');
-    const response = await fetchReceivedLikesFunction({ userId: currentUserId });
-  
-    return response.data.receivedLikes;
+    try {
+      const response = await fetchReceivedLikesFunction({ userId: currentUserId });
+      return response.data.receivedLikes;
+    } catch (error) {
+      console.error("Error fetching received likes:", error.message, error.code, error.details);
+      throw error;
+    }
   };
 
   //
@@ -310,6 +314,23 @@ export const sendMessage = async (matchId, messageText, senderID, receiverID) =>
     }
   } catch (error) {
     console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
+//
+// PRIVATE REQUESTS
+//
+
+// New function to securely fetch user names and photos
+export const fetchUserNamesAndPhotos = async (uids) => {
+  const fetchUserDataFunc = httpsCallable(functions, 'fetchUserNamesAndPhotos');
+  
+  try {
+    const response = await fetchUserDataFunc({ uids });
+    return response.data.userDetails; // Return user details if available
+  } catch (error) {
+    console.error('Error fetching user names and photos:', error);
     throw error;
   }
 };

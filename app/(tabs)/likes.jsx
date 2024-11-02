@@ -18,7 +18,7 @@ const Likes = () => {
       const likesData = await fetchReceivedLikes();
       setReceivedLikes(likesData);
     } catch (error) {
-      console.error("Error fetching received likes:", error);
+      console.error("Error fetching received likes:", error.message, error.code, error.details);
     }
   };
 

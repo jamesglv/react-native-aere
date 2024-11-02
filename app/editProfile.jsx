@@ -153,7 +153,9 @@ const EditProfile = () => {
 
   // Handle Living With selection change
   const handleLivingWithChange = (condition) => {
-    const updatedLivingWith = { ...livingWith, [condition]: !livingWith[condition] };
+    const updatedLivingWith = livingWith.includes(condition)
+      ? livingWith.filter(item => item !== condition)
+      : [...livingWith, condition];
     setLivingWith(updatedLivingWith);
     updateUserDocument({ livingWith: updatedLivingWith }); // Update Firestore
   };
@@ -307,7 +309,7 @@ const EditProfile = () => {
           <CheckBox
             key={condition}
             title={condition}
-            checked={livingWith[condition]}
+            checked={livingWith.includes(condition)}
             onPress={() => handleLivingWithChange(condition)}
           />
         ))}
