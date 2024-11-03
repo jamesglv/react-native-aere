@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar, Modal } from 'react-native';
+import { View, Text, FlatList, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';
 import { getDoc, doc } from 'firebase/firestore';
@@ -159,6 +159,7 @@ const Home = () => {
           currentUserId={currentUserId} // Pass currentUserId
         />
 
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {filteredProfiles.length === 0 ? (
           <View style={styles.noProfilesContainer}>
             <Text style={styles.noProfilesText}>No profiles available. Adjust filters to find matches.</Text>
@@ -186,8 +187,9 @@ const Home = () => {
             contentContainerStyle={styles.profilesCarousel}
             bounces={false}
           />
-
         )}
+        </ScrollView>
+
 
         <TouchableOpacity style={styles.settingsButton} onPress={toggleFilterModal}>
           <FontAwesomeIcon icon={faSliders} size={20} color="#fff" />
@@ -199,6 +201,7 @@ const Home = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1c1c1e' },
+  scrollView: { nestedScrollEnabled: true },
   noProfilesContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   noProfilesText: { fontSize: 18, textAlign: 'center', color: '#333', marginBottom: 20 },
   adjustFiltersButton: { backgroundColor: '#007bff', padding: 10, borderRadius: 20, paddingHorizontal: 20 },

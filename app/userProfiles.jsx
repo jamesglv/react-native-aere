@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, FlatList, Modal, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FIREBASE_DB, FIREBASE_AUTH } from '../firebaseConfig';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { FIREBASE_AUTH } from '../firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { fetchTargetUserData, handleRequestAccess } from '../firebaseActions'; // Import the fetchUserData and handleRequestAccess functions
 
 const { width, height } = Dimensions.get('window');
 
@@ -40,10 +40,13 @@ const UserProfiles = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const userDocRef = doc(FIREBASE_DB, 'users', userId);
-      const userSnapshot = await getDoc(userDocRef);
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
+      if (!currentUserId) {
+        Alert.alert('Error', 'User not authenticated. Please log in.');
+        router.push('/login'); // Redirect to login page
+        return;
+      }
+      try {
+        const userData = await fetchTargetUserData(userId, ['privateAccepted', 'privateRequests', 'privatePhotos', 'photos', 'name', 'age', 'bio', 'livingWith']);
         setUser(userData);
 
         // Check if the current user has access to the private album
@@ -55,6 +58,9 @@ const UserProfiles = () => {
         if (userData.privateRequests && userData.privateRequests.includes(currentUserId)) {
           setHasRequested(true);
         }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        Alert.alert('Error', 'Failed to load user data.');
       }
     };
 
@@ -76,37 +82,27 @@ const UserProfiles = () => {
       setModalVisible(true);  // Open modal if access is granted
     } else if (!hasRequested) {
       try {
-        // Add current user ID to the target user's privateRequests array in Firestore
-        const userDocRef = doc(FIREBASE_DB, 'users', userId);
-        await updateDoc(userDocRef, {
-          privateRequests: arrayUnion(currentUserId),
-        });
-  
-        // Update the state to reflect that access has been requested
+        await handleRequestAccess(currentUserId, userId);
         setHasRequested(true);
-  
       } catch (error) {
-        console.error("Error updating privateRequests:", error);
+        console.error("Error requesting access:", error);
         Alert.alert('Error', 'Failed to send request. Please try again later.');
       }
     }
   };
 
-  const handleRequestAccess = async () => {
+  const handleRequestAccessButton = async () => {
     if (hasRequested) return;
 
     try {
-        await updateDoc(doc(FIREBASE_DB, 'users', userId), {
-        privateRequests: arrayUnion(currentUserId),
-        });
-
-        Alert.alert('Request Sent', 'Your access request has been sent.');
-        setHasRequested(true);
+      await handleRequestAccess(currentUserId, userId);
+      Alert.alert('Request Sent', 'Your access request has been sent.');
+      setHasRequested(true);
     } catch (error) {
-        console.error('Error updating privateRequests:', error);
-        Alert.alert('Error', 'Failed to send access request.');
+      console.error('Error requesting access:', error);
+      Alert.alert('Error', 'Failed to send access request.');
     }
-    };
+  };
 
   return (
     <View style={styles.container}>
@@ -130,12 +126,17 @@ const UserProfiles = () => {
 
       {/* User Information */}
       <View style={styles.infoContainer}>
-        <Text style={styles.name}>{user.name}, {user.age}</Text>
+        <Text style={styles.name} className='font-obold'>{user.name}, {user.age}</Text>
+        {Array.isArray(user.livingWith) && user.livingWith.length > 0 && (
+          <Text className='font-oregular' style={styles.livingWith}>
+            {profile.livingWith.join(', ')}
+          </Text>
+        )}
         <Text style={styles.bio}>{user.bio}</Text>
         
         {/* Private Album Section */}
         <View style={styles.privateAlbumContainer}>
-          <Text style={styles.privateAlbumTitle}>Private Album</Text>
+          <Text style={styles.privateAlbumTitle} className='font-oregular'>Private Album</Text>
           <View style={styles.privatePhotosContainer}>
             {displayPhotos.map((photo, index) => (
               <Image
@@ -148,13 +149,13 @@ const UserProfiles = () => {
           </View>
           <TouchableOpacity
             style={styles.requestAccessButton}
-            onPress={hasAccess ? openPhotoViewer : handleRequestAccess}
+            onPress={hasAccess ? openPhotoViewer : handleRequestAccessButton}
             disabled={hasRequested}
-            >
+          >
             <Text style={styles.requestAccessButtonText}>
-                {hasAccess ? 'View Album' : hasRequested ? 'Requested' : 'Request Access'}
+              {hasAccess ? 'View Album' : hasRequested ? 'Requested' : 'Request Access'}
             </Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -183,6 +184,7 @@ const UserProfiles = () => {
     </View>
   );
 };
+
 // Styles
 const styles = StyleSheet.create({
   container: {
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
     left: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 25,
     zIndex: 10,
   },
   photoCarouselContainer: {
@@ -211,46 +213,51 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     marginTop: -20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    // borderTopLeftRadius: 20,
+    // borderTopRightRadius: 20,
   },
   name: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  livingWith: { fontSize: 18, paddingBottom: 10},
   bio: {
     fontSize: 16,
     color: '#1c1c1e',
   },
-  privateAlbumContainer: {
-    marginTop: 20,
+  privateAlbumContainer: { 
+    marginTop: 20, 
+    padding: 15, 
+    backgroundColor: '#f9f9f9', 
+    borderRadius: 10 
   },
   privateAlbumTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#333', 
+    marginBottom: 15,
   },
   privatePhotosContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 10
   },
   privatePhoto: {
-    width: width * 0.25,
-    height: width * 0.25,
+    width: 100,
+    height: 100,
     borderRadius: 10,
   },
   requestAccessButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
+    backgroundColor: '#6a6a6a', 
+    paddingVertical: 15, 
+    borderRadius: 8, 
+    alignItems: 'center'
   },
   requestAccessButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 16
   },
   errorText: {
     fontSize: 18,

@@ -12,6 +12,7 @@ const { width } = Dimensions.get('window');  // Get screen width for layout
 
 const Chats = () => {
   const [matches, setMatches] = useState([]);  // Store the matched users' profiles
+  const [navigationLock, setNavigationLock] = useState(false); // Add navigation lock state
   const currentUserId = FIREBASE_AUTH.currentUser?.uid;  // Get the logged-in user's ID
   const router = useRouter();  // For navigation
 
@@ -68,6 +69,8 @@ const Chats = () => {
         style={styles.matchItem}
         activeOpacity={1}
         onPress={async () => {
+          if (navigationLock) return; // Check if navigation is locked
+          setNavigationLock(true); // Lock navigation
           try {
             await handleUpdateReadStatus(item.matchId);
             router.push({
@@ -81,16 +84,20 @@ const Chats = () => {
             });
           } catch (error) {
             console.error("Error navigating to chat:", error);
+          } finally {
+            setNavigationLock(false); // Unlock navigation after navigation completes
           }
         }}
       >
         <Image source={{ uri: item.photos[0] }} style={styles.profileImage} />
         <View>
           <View style={styles.nameContainer}>
-            <Text style={styles.matchName}>{item.name}</Text>
+            <Text style={styles.matchName} className='font-oregular'>{item.name}</Text>
             {isUnread && <View style={styles.blueDot} />}
           </View>
-          <Text style={styles.messagePreview}>
+          <Text style={styles.messagePreview} 
+            numberOfLines={1}  // Limit to one line
+            ellipsizeMode="tail">
             {item.messagePreview || "Start a conversation"}
           </Text>
         </View>
@@ -116,7 +123,7 @@ const Chats = () => {
   return (
     <View style={styles.container}>
       <StatusBar hidden={false} />
-      <Text style={styles.title}>Matches</Text>
+      <Text style={styles.title} className='font-oregular'>Matches</Text>
       {matches.length > 0 ? (
         <SwipeListView
           data={matches}
@@ -129,7 +136,7 @@ const Chats = () => {
           keyExtractor={(item) => item.id}
         />
       ) : (
-        <Text style={styles.noMatchesText}>No matches found.</Text>
+        <Text style={styles.noMatchesText} className='font-obold'>No matches found.</Text>
       )}
     </View>
   );
@@ -139,21 +146,22 @@ const Chats = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-    padding: 10,
+    backgroundColor: 'white',
+    paddingVertical: 10,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    //fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
-    paddingTop: 30,
+    paddingTop: 35,
   },
   matchItem: {
     flexDirection: 'row',  // Align image and text side by side
     alignItems: 'center',  // Vertically center align the text and image
     width: '100%',  // Full width of the screen
     padding: 15,
+    paddingLeft: 25,
     backgroundColor: '#fff',
     //marginBottom: 10,
     shadowColor: '#000',
@@ -174,8 +182,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',  // Vertically center the name and the blue dot
   },
   matchName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    //fontWeight: 'bold',
     color: '#333',
   },
   blueDot: {
@@ -187,6 +195,8 @@ const styles = StyleSheet.create({
   },
   messagePreview: {
     color: '#999',
+    fontSize: 16, 
+    width: width - 130, // Add some padding to the right for spacing
   },
   // The hidden container now matches the height of the match item
   hiddenItemContainer: {

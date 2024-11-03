@@ -334,3 +334,10 @@ export const fetchUserNamesAndPhotos = async (uids) => {
     throw error;
   }
 };
+
+export const fetchTargetUserData = async (targetUserId, fields) => {
+  const fetchTargetUserDataFunction = httpsCallable(functions, 'fetchTargetUserData');
+  const response = await fetchTargetUserDataFunction({ targetUserId, fields });
+
+  return response.data.userData;  // Access 'userData' from response
+};

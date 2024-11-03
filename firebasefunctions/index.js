@@ -690,3 +690,43 @@ exports.fetchUserNamesAndPhotos = functions.https.onCall(async (data, context) =
     throw new functions.https.HttpsError('internal', 'Failed to fetch user data');
   }
 });
+
+// FETCH TARGET USER DATA SELECTIVELY
+
+/// combine into the fetchUserData function
+
+exports.fetchTargetUserData = functions.https.onCall(async (data, context) => {
+  const { targetUserId, fields } = data;
+
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to fetch profile data.'
+    );
+  }
+
+  try {
+    const userDocRef = db.collection('users').doc(targetUserId);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'User profile not found');
+    }
+
+    const userData = userDoc.data();
+
+    // Ensure selectedData only contains requested fields
+    const selectedData = fields.reduce((result, field) => {
+      if (userData.hasOwnProperty(field)) {
+        result[field] = userData[field];
+      }
+      return result;
+    }, {});
+
+    return { userData: selectedData };
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to fetch user data');
+  }
+});

@@ -4,6 +4,7 @@ import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';  // Firestore
 import { doc, getDoc } from 'firebase/firestore';  // Firestore functions
 import { useRouter, useFocusEffect } from 'expo-router';  // Expo Router for navigation and focus effect
 import { fetchReceivedLikes } from '../../firebaseActions'; // Import the fetchReceivedLikes function
+import { height } from '@fortawesome/free-solid-svg-icons/faHeart';
 
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
@@ -47,6 +48,7 @@ const Likes = () => {
       <Text style={styles.title}>Likes</Text>
       {receivedLikes.length === 0 ? (  // Check if there are no likes
         <View style={styles.noLikesContainer}>
+          <Image source={require('../../assets/images/rose.jpg')} style={{ width: width * 0.6, height: width * 0.6, opacity: 0.5 }} />
           <Text style={styles.noLikesText}>No likes yet. Check back later!</Text>
         </View>
       ) : (
@@ -66,7 +68,7 @@ const Likes = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: 'white',
     paddingHorizontal: 10,
   },
   title: {

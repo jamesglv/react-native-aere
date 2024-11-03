@@ -1,6 +1,6 @@
 // ProfileCard.jsx
 import React, { useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Dimensions, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faHeart } from '@fortawesome/free-solid-svg-icons/faHeart';
@@ -30,6 +30,7 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
 
   
   return (
+    
     <View style={styles.card}>
       {/* Photo Carousel */}
       <View style={styles.photoCarouselContainer}>
