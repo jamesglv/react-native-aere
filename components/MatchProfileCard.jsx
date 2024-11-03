@@ -2,14 +2,13 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { faHeart } from '@fortawesome/free-solid-svg-icons/faHeart';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
-const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum }) => {
+const MatchProfileCard = ({ profile, handleRequestAccess, handleSharePrivateAlbum, hasAccess, hasRequested }) => {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [isPhotoViewerVisible, setIsPhotoViewerVisible] = useState(false);
 
   // Placeholder images for the private album
   const placeholderImages = [
@@ -18,10 +17,11 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
     require('../assets/images/placeholder-profile-3.png'),
   ];
 
-  const privatePhotos = profile.privatePhotos || [];
+  const privatePhotos = [
+    ...(profile.privatePhotos || []).slice(0, 3),
+    ...placeholderImages.slice((profile.privatePhotos || []).length),
+  ];
 
-
-  console.log('private', profile.privatePhotos);
   // Open the share modal when the user requests access
   const onRequestAccess = () => {
     handleRequestAccess(profile.id); // Handle initial request
@@ -55,35 +55,32 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
         )}
         <Text style={styles.bio}>{profile.bio}</Text>
         {/* Private Album */}
-        {privatePhotos && privatePhotos.length > 0 && (
-          <View style={styles.privateAlbumContainer}>
-            <Text style={styles.albumTitle}>Private Album</Text>
-            <View style={styles.blurredImagesContainer}>
-              {privatePhotos.map((photo, index) => (
-                <Image
-                  key={index}
-                  source={typeof photo === 'string' ? { uri: photo } : photo}
-                  style={styles.blurredImage}
-                  blurRadius={30}
-                />
-              ))}
-            </View>
-            <TouchableOpacity style={styles.requestAccessButton} onPress={onRequestAccess}>
-              <Text style={styles.requestAccessText}>Like and Request Access</Text>
-            </TouchableOpacity>
+        {profile.privatePhotos && profile.privatePhotos.length > 0 && (
+        <View style={styles.privateAlbumContainer}>
+          <Text style={styles.albumTitle}>Private Album</Text>
+          <View style={styles.blurredImagesContainer}>
+            {privatePhotos.map((photo, index) => (
+              <Image
+                key={index}
+                source={typeof photo === 'string' ? { uri: photo } : photo}
+                style={styles.blurredImage}
+                blurRadius={30}
+              />
+            ))}
           </View>
-        )}
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.likeButton} onPress={() => handleLike(profile.id)}>
-            <FontAwesomeIcon icon={faHeart} size={30} color="black" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.declineButton} onPress={() => handleDecline(profile.id)}>
-            <Ionicons name="close" size={30} color="black" />
+          <TouchableOpacity
+            style={styles.requestAccessButton}
+            onPress={hasAccess ? () => setIsPhotoViewerVisible(true) : onRequestAccess}
+            disabled={hasRequested && !hasAccess}
+          >
+            <Text style={styles.requestAccessText}>
+              {hasAccess ? 'View Album' : hasRequested ? 'Requested' : 'Request Access'}
+            </Text>
           </TouchableOpacity>
         </View>
+        )}
       </View>
+    
 
       {/* Share Confirmation Modal */}
       <Modal
@@ -104,7 +101,6 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
               style={styles.shareButton}
               onPress={() => {
                 handleSharePrivateAlbum(profile.id);
-                handleLike(profile.id);
                 setIsShareModalVisible(false); // Close modal after sharing
               }}
             >
@@ -120,6 +116,31 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
             </TouchableOpacity>
           </View>
         </LinearGradient>
+      </Modal>
+      {/* Photo Viewer Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isPhotoViewerVisible}
+        onRequestClose={() => setIsPhotoViewerVisible(false)}
+      >
+        <View style={styles.photoViewerOverlay}>
+          <FlatList
+            data={profile.privatePhotos}
+            horizontal
+            pagingEnabled
+            keyExtractor={(photo, index) => index.toString()}
+            renderItem={({ item: photo }) => (
+              <Image source={{ uri: photo }} style={styles.fullScreenImage} />
+            )}
+          />
+          <TouchableOpacity
+            style={styles.closePhotoViewerButton}
+            onPress={() => setIsPhotoViewerVisible(false)}
+          >
+            <Ionicons name='close' size={30} color='white' />
+          </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -139,9 +160,6 @@ const styles = StyleSheet.create({
   blurredImage: { width: 100, height: 100, borderRadius: 10 },
   requestAccessButton: { backgroundColor: '#6a6a6a', paddingVertical: 15, borderRadius: 8, alignItems: 'center' },
   requestAccessText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  actionButtons: { position: 'absolute', right: 20, top: height / 2 - 600, alignItems: 'center', height: 130, justifyContent: 'space-between' },
-  likeButton: { backgroundColor: '#fff', padding: 23, marginBottom: 25, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
-  declineButton: { backgroundColor: '#fff', padding: 15, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
   livingWith: { fontSize: 18, paddingBottom: 10},
 
   // Modal styles
@@ -152,6 +170,11 @@ const styles = StyleSheet.create({
   shareButtonText: { color: '#fff', fontSize: 16 },
   closeModalButton: { marginTop: 10 },
   closeModalText: { color: '#007bff', fontSize: 16 },
+
+    // Photo Viewer styles
+    photoViewerOverlay: { flex: 1, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' },
+    fullScreenImage: { width: width, height: height, resizeMode: 'contain' },
+    closePhotoViewerButton: { position: 'absolute', top: 40, right: 20 },
 });
 
-export default ProfileCard;
+export default MatchProfileCard;

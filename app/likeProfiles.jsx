@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Button, Alert, FlatList } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Alert, FlatList, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../firebaseConfig';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc } from 'firebase/firestore';
 import uuid from 'react-native-uuid';  // Use react-native-uuid for generating UUIDs
 import { Ionicons } from '@expo/vector-icons';
 import { Timestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import { fetchTargetUserData, handleRequestAccess as handleRequestAccessAction, handleMatch as handleMatchAction, declineUser as declineUserAction, handleSharePrivateAlbum } from '../firebaseActions'; // Import the fetchUserData and handleRequestAccess functions
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faHeart } from '@fortawesome/free-solid-svg-icons';
+import ProfileCard from '../components/ProfileCard';
+
 
 import placeholder1 from '../assets/images/placeholder-profile-1.png';
 import placeholder2 from '../assets/images/placeholder-profile-2.png';
@@ -22,7 +28,8 @@ const likeProfiles = () => {
   const navigation = useNavigation();
   const [hasAccess, setHasAccess] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
-
+  const [selectedProfile, setSelectedProfile] = useState(null); // Add this line
+  const [showModal, setShowModal] = useState(false); // Add this line
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -30,182 +37,116 @@ const likeProfiles = () => {
     });
   }, [navigation]);
 
-  // Fetch the profile data of the liked user
   useEffect(() => {
     const fetchUser = async () => {
-      const userDocRef = doc(FIREBASE_DB, 'users', userId);
-      const userSnapshot = await getDoc(userDocRef);
-      if (userSnapshot.exists()) {
-        setUser(userSnapshot.data());
+      if (!currentUserId) {
+        Alert.alert('Error', 'User not authenticated. Please log in.');
+        router.push('/login');
+        return;
+      }
+      try {
+        const userData = await fetchTargetUserData(userId, ['privateAccepted', 'privateRequests', 'privatePhotos', 'photos', 'name', 'age', 'bio', 'livingWith']);
+        setUser(userData);
+
+        if (userData.privateAccepted && userData.privateAccepted.includes(currentUserId)) {
+          setHasAccess(true);
+        }
+
+        if (userData.privateRequests && userData.privateRequests.includes(currentUserId)) {
+          setHasRequested(true);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        Alert.alert('Error', 'Failed to load user data.');
       }
     };
 
     if (userId) {
       fetchUser();
     }
-  }, [userId]);
-
-  useEffect(() => {
-    const checkAccessStatus = () => {
-      if (user) {
-        setHasRequested(user.privateRequests?.includes(currentUserId) || false);
-        setHasAccess(user.privateAccepted?.includes(currentUserId) || false);
-      }
-    };
-    checkAccessStatus();
-  }, [user]);
+  }, [userId, currentUserId]);
 
   const handleMatch = async () => {
     try {
-      const matchId = uuid.v4();  // Generate a unique match ID using react-native-uuid
-  
-      // References to both the current user and liked user documents
-      const currentUserDocRef = doc(FIREBASE_DB, 'users', currentUserId);
-      const likedUserDocRef = doc(FIREBASE_DB, 'users', userId);
-  
-      await updateDoc(currentUserDocRef, {
-        matches: arrayUnion(matchId),          // Add match ID to current user's matches
-        receivedLikes: arrayRemove(userId),    // Remove liked user from receivedLikes
-        hiddenProfiles: arrayUnion(userId),    // Add target user to hiddenProfiles array
-      });
-  
-      await updateDoc(likedUserDocRef, {
-        matches: arrayUnion(matchId),  // Add match ID to liked user's matches
-      });
-  
-      // Create a document in the 'matches' collection with the match info
-      const matchDocRef = doc(FIREBASE_DB, 'matches', matchId);
-      await setDoc(matchDocRef, {
-        matchId: matchId,
-        users: [currentUserId, userId],
-        createdAt: Timestamp.now(),  // Store the timestamp
-        lastMessage: Timestamp.now(),
-        messagePreview: '',
-        messages: [],
-        privateRequests: [],
-        read: { [currentUserId]: false, [userId]: false },
-      });
-  
-      // Navigate back to the likes page
+      await handleMatchAction(currentUserId, userId);
       router.back();
     } catch (error) {
       Alert.alert("Error", error.message);
     }
-  };  
+  };
 
   const handleDecline = async () => {
     try {
-      const currentUserDocRef = doc(FIREBASE_DB, 'users', currentUserId);
-  
-      // Remove the liked user from the current user's receivedLikes field
-      await updateDoc(currentUserDocRef, {
-        receivedLikes: arrayRemove(userId),     // Remove liked user from receivedLikes
-        hiddenProfiles: arrayUnion(userId),     // Add target user to hiddenProfiles array
-      });
-  
-      // Navigate back to the likes page
+      await declineUserAction(currentUserId, userId);
       router.back();
     } catch (error) {
       Alert.alert("Error", error.message);
     }
-  };  
+  };
 
   const handleRequestAccess = async () => {
     if (hasRequested) return;
   
     try {
-      await updateDoc(doc(FIREBASE_DB, 'users', userId), {
-        privateRequests: arrayUnion(currentUserId),
-      });
-  
+      await handleRequestAccessAction(currentUserId, userId);
       Alert.alert('Request Sent', 'Your access request has been sent.');
       setHasRequested(true);
+      setSelectedProfile(userId); // Set the selected profile
+      setShowModal(true); // Show the modal
     } catch (error) {
-      console.error('Error updating privateRequests:', error);
+      console.error('Error requesting access:', error);
       Alert.alert('Error', 'Failed to send access request.');
     }
-  };  
+  };
 
   if (!user) {
     return <Text style={styles.errorText}>Loading user data...</Text>;
   }
 
-  // Merging privatePhotos with placeholders if fewer than 3
   const privatePhotos = (user.privatePhotos || []).slice(0, 3);
   const placeholders = [placeholder1, placeholder2, placeholder3];
-  const displayPhotos = [...privatePhotos, ...placeholders].slice(0, 3); // Ensure exactly 3 photos
+  const displayPhotos = [...privatePhotos, ...placeholders].slice(0, 3);
 
+  const targetUserId = userId; // Get the target user ID
   return (
-    <View style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color="#fff" />
-      </TouchableOpacity>
+    <>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
 
-      {/* Photos Carousel */}
-      <View style={styles.photoCarouselContainer}>
-        <FlatList
-          data={user.photos}
-          keyExtractor={(photo, index) => index.toString()}
-          renderItem={({ item: photo }) => (
-            <Image source={{ uri: photo }} style={styles.profileImage} />
-          )}
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
-
-      {/* User Information */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.name}>{user.name}, {user.age}</Text>
-        <Text style={styles.bio}>{user.bio}</Text>
-
-        <View style={styles.privateAlbumContainer}>
-          <Text style={styles.privateAlbumTitle}>Private Album</Text>
-          <View style={styles.privatePhotosContainer}>
-            {displayPhotos.map((photo, index) => (
-              <Image
-                key={index}
-                source={typeof photo === 'string' ? { uri: photo } : photo} // Use URI or local asset
-                style={styles.privatePhoto}
-                blurRadius={hasAccess ? 0 : 20} // Remove blur if access is granted
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          {/* Back Button */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+          <FlatList
+            data={[user]}
+            horizontal
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <ProfileCard
+                profile={item}
+                handleLike={handleMatch}
+                handleDecline={handleDecline}
+                handleRequestAccess={() => handleRequestAccess(currentUserId, userId, setSelectedProfile, setShowModal)}
+                handleSharePrivateAlbum={() => handleSharePrivateAlbum(currentUserId, userId, setShowModal)}
               />
-            ))}
-          </View>
-            <TouchableOpacity
-              style={styles.requestAccessButton}
-              onPress={() => {
-                if (!hasAccess && !hasRequested) {
-                  handleRequestAccess();
-                  handleMatch();
-                } else if (hasAccess) {
-                  openPhotoViewer();
-                }
-              }}
-              disabled={hasRequested}
-            >
-              <Text style={styles.requestAccessButtonText}>
-                {hasAccess ? 'View Album' : hasRequested ? 'Requested' : 'Match and Request Access'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-
-        {/* Match and Decline Buttons */}
-        <View style={styles.buttonsContainer}>
-          <Button title="Match" onPress={handleMatch} color="green" />
-          <Button title="Decline" onPress={handleDecline} color="red" />
-        </View>
-      </View>
-    </View>
+            )}
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            //refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            contentContainerStyle={styles.profilesCarousel}
+            bounces={false}
+          />
+        
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
   },
   backButton: {
     position: 'absolute',
@@ -213,38 +154,31 @@ const styles = StyleSheet.create({
     left: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 25,
     zIndex: 10,
   },
   photoCarouselContainer: {
-    height: height * 0.5,  // Fixed height for the carousel
+    height: height * 0.5,
     width: '100%',
   },
   profileImage: {
     width: width,
-    height: height * 0.5,  // Adjust image to fit within container height
+    height: height * 0.5,
     resizeMode: 'cover',
   },
   infoContainer: {
     padding: 20,
     backgroundColor: '#fff',
-    marginTop: -20,  // Slight overlap with the photos
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   name: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  livingWith: { fontSize: 18, paddingBottom: 10 },
   bio: {
     fontSize: 16,
     color: '#1c1c1e',
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
   },
   errorText: {
     fontSize: 18,
@@ -252,41 +186,72 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  privateAlbumContainer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-    alignItems: 'center',
+  privateAlbumContainer: { 
+    marginTop: 20, 
+    padding: 15, 
+    backgroundColor: '#f9f9f9', 
+    borderRadius: 10 
   },
   privateAlbumTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#333', 
+    marginBottom: 15,
   },
   privatePhotosContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 10,
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 10
   },
   privatePhoto: {
-    width: 60,
-    height: 60,
-    borderRadius: 5,
-    marginHorizontal: 5,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
   },
   requestAccessButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
+    backgroundColor: '#6a6a6a', 
+    paddingVertical: 15, 
+    borderRadius: 8, 
+    alignItems: 'center'
   },
   requestAccessButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 16
   },
-  
+  actionButtons: { 
+    position: 'absolute', 
+    right: 20, 
+    top: height / 2 - 600, 
+    alignItems: 'center', 
+    height: 130, 
+    justifyContent: 'space-between' 
+  },
+  likeButton: { 
+    backgroundColor: '#fff', 
+    padding: 23, 
+    marginBottom: 25, 
+    borderRadius: 50, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 2, 
+    elevation: 5 
+  },
+  declineButton: { 
+    backgroundColor: '#fff', 
+    padding: 15, 
+    borderRadius: 50, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 2, 
+    elevation: 5 
+  },
 });
 
 export default likeProfiles;

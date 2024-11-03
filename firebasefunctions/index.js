@@ -245,6 +245,7 @@ exports.handleDecline = functions.https.onCall(async (data, context) => {
 
     await currentUserRef.update({
       declinedUsers: admin.firestore.FieldValue.arrayUnion(targetUserId),
+      receivedLikes: admin.firestore.FieldValue.arrayRemove(targetUserId),
       hiddenProfiles: admin.firestore.FieldValue.arrayUnion(targetUserId),
     });
 
@@ -728,5 +729,50 @@ exports.fetchTargetUserData = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Error fetching user data:', error);
     throw new functions.https.HttpsError('internal', 'Failed to fetch user data');
+  }
+});
+
+exports.handleMatch = functions.https.onCall(async (data, context) => {
+  const { currentUserId, targetUserId } = data;
+
+  if (!context.auth || context.auth.uid !== currentUserId) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to match a profile.'
+    );
+  }
+
+  try {
+    const matchId = uuidv4();  // Generate a unique match ID
+
+    const currentUserRef = db.collection('users').doc(currentUserId);
+    const targetUserRef = db.collection('users').doc(targetUserId);
+
+    await currentUserRef.update({
+      matches: admin.firestore.FieldValue.arrayUnion(matchId),
+      receivedLikes: admin.firestore.FieldValue.arrayRemove(targetUserId),
+      hiddenProfiles: admin.firestore.FieldValue.arrayUnion(targetUserId),
+    });
+
+    await targetUserRef.update({
+      matches: admin.firestore.FieldValue.arrayUnion(matchId),
+    });
+
+    const matchDocRef = db.collection('matches').doc(matchId);
+    await matchDocRef.set({
+      matchId: matchId,
+      users: [currentUserId, targetUserId],
+      createdAt: admin.firestore.Timestamp.now(),
+      lastMessage: admin.firestore.Timestamp.now(),
+      messagePreview: '',
+      messages: [],
+      privateRequests: [],
+      read: { [currentUserId]: false, [targetUserId]: false },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error handling match:", error);
+    throw new functions.https.HttpsError('internal', 'Unable to match user.');
   }
 });

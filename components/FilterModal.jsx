@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     alignItems: 'center',
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, marginTop: 10 },
+  modalTitle: { fontSize: 20, marginBottom: 20, marginTop: 10 },
   ageLabelContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

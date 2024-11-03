@@ -7,7 +7,6 @@ import { SwipeListView } from 'react-native-swipe-list-view';  // Import SwipeLi
 import { Ionicons } from '@expo/vector-icons';  // Import Ionicons (or FontAwesome if you prefer)
 import { fetchMatches, deleteMatch, updateReadStatus } from '../../firebaseActions'; // Import your fetchMatches function
 
-
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
 const Chats = () => {
@@ -38,7 +37,6 @@ const Chats = () => {
       const result = await deleteMatch(matchId);
       if (result.success) {
         setMatches((prevMatches) => prevMatches.filter((match) => match.matchId !== matchId));
-        Alert.alert('Match deleted successfully');
       } else {
         Alert.alert('Failed to delete match');
       }
@@ -136,7 +134,12 @@ const Chats = () => {
           keyExtractor={(item) => item.id}
         />
       ) : (
-        <Text style={styles.noMatchesText} className='font-obold'>No matches found.</Text>
+        <View style={styles.noMatchesContainer}>
+          <Image source={require('../../assets/images/holding-hands.png')} style={{ width: width * 0.6, height: width * 0.6, opacity: 0.5 }} />
+          <Text style={styles.noMatchesText}>No matches yet.</Text>
+          <Text style={styles.noMatchesText}>Keep sending likes to find more matches!</Text>
+
+        </View>
       )}
     </View>
   );
@@ -151,7 +154,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    //fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
     paddingTop: 35,
@@ -219,11 +221,15 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',  // Align the icon to the right
     paddingRight: 25,  // Add some padding to the right for spacing
   },
+  noMatchesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   noMatchesText: {
     fontSize: 18,
     color: '#999',
     textAlign: 'center',
-    marginTop: 20,
   },
 });
 

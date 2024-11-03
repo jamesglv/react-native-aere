@@ -152,12 +152,13 @@ export const handleRequestAccess = async (currentUserId, targetUserId, setSelect
   }
 };
 
-export const handleSharePrivateAlbum = async (currentUserId, targetUserId, setShowModal) => {
+export const handleSharePrivateAlbum = async (currentUserId, targetUserId, setSelectedProfile, setShowModal) => {
   try {
     const handleSharePrivateAlbumFunc = httpsCallable(functions, 'handleSharePrivateAlbum');
     const response = await handleSharePrivateAlbumFunc({ currentUserId, targetUserId });
 
     if (response.data.success) {
+      setSelectedProfile(targetUserId);
       setShowModal(false);
     } else {
       console.log("Failed to share private album.");
@@ -340,4 +341,30 @@ export const fetchTargetUserData = async (targetUserId, fields) => {
   const response = await fetchTargetUserDataFunction({ targetUserId, fields });
 
   return response.data.userData;  // Access 'userData' from response
+};
+
+export const handleMatch = async (currentUserId, targetUserId) => {
+  const handleMatchFunc = httpsCallable(functions, 'handleMatch');
+  try {
+    const response = await handleMatchFunc({ currentUserId, targetUserId });
+    if (!response.data.success) {
+      throw new Error('Failed to match user');
+    }
+  } catch (error) {
+    console.error("Error matching user:", error);
+    throw error;
+  }
+};
+
+export const declineUser = async (currentUserId, targetUserId) => {
+  const handleDeclineFunc = httpsCallable(functions, 'handleDecline');
+  try {
+    const response = await handleDeclineFunc({ currentUserId, targetUserId });
+    if (!response.data.success) {
+      throw new Error('Failed to decline user');
+    }
+  } catch (error) {
+    console.error("Error declining user:", error);
+    throw error;
+  }
 };

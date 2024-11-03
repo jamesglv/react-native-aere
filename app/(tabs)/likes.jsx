@@ -45,11 +45,13 @@ const Likes = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Likes</Text>
+      <Text style={styles.title} className='font-oregular'>Likes</Text>
       {receivedLikes.length === 0 ? (  // Check if there are no likes
         <View style={styles.noLikesContainer}>
           <Image source={require('../../assets/images/rose.jpg')} style={{ width: width * 0.6, height: width * 0.6, opacity: 0.5 }} />
-          <Text style={styles.noLikesText}>No likes yet. Check back later!</Text>
+          <Text style={styles.noLikesText}>No likes yet.</Text>
+          <Text style={styles.noLikesText}>Don't worry! They'll show up soon.</Text>
+
         </View>
       ) : (
         <FlatList
@@ -70,12 +72,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
     textAlign: 'center',
     marginVertical: 20,
+    paddingTop: 35,
   },
   listContent: {
     justifyContent: 'space-between',

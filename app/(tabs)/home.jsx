@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar, Modal, ScrollView } from 'react-native';
+import { View, Text, Image, FlatList, RefreshControl, TouchableOpacity, Alert, Dimensions, StyleSheet, StatusBar, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FIREBASE_DB, FIREBASE_AUTH } from '../../firebaseConfig';
 import { getDoc, doc } from 'firebase/firestore';
@@ -162,9 +162,12 @@ const Home = () => {
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {filteredProfiles.length === 0 ? (
           <View style={styles.noProfilesContainer}>
-            <Text style={styles.noProfilesText}>No profiles available. Adjust filters to find matches.</Text>
+            <Image source={require('../../assets/images/couple.png')} style={{ width: width * 0.5, height: width * 0.5, opacity: 0.5, marginBottom: 20 }} />
+            <Text style={styles.noProfilesText}>No profiles available.</Text>
+            <Text style={styles.noProfilesText}>Adjust filters to find matches.</Text>
+
             <TouchableOpacity style={styles.adjustFiltersButton} onPress={toggleFilterModal}>
-              <Text style={styles.adjustFiltersButtonText}>Adjust Filters</Text>
+              <Text style={styles.adjustFiltersButtonText} className='font-oregular'>Adjust Filters</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -202,10 +205,17 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1c1c1e' },
   scrollView: { nestedScrollEnabled: true },
-  noProfilesContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  noProfilesText: { fontSize: 18, textAlign: 'center', color: '#333', marginBottom: 20 },
-  adjustFiltersButton: { backgroundColor: '#007bff', padding: 10, borderRadius: 20, paddingHorizontal: 20 },
-  adjustFiltersButtonText: { color: '#fff', fontSize: 16 },
+  noProfilesContainer: { 
+    width: '100%', 
+    height: height, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: '#fff', 
+    marginBottom: 40,
+  },  
+  noProfilesText: { fontSize: 18, textAlign: 'center', color: '#999'},
+  adjustFiltersButton: { backgroundColor: 'black', padding: 10, borderRadius: 25, paddingHorizontal: 20, marginTop: 30, },
+  adjustFiltersButtonText: { color: '#fff', fontSize: 18, margin: 5 },
   profilesCarousel: { alignItems: 'top' },
   settingsButton: { position: 'absolute', top: 40, right: 20, zIndex: 2, backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: 15, borderRadius: 40, height: 50, width: 50, marginTop: 10 },
 });
