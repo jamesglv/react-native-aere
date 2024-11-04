@@ -1,9 +1,8 @@
-import { View, Text, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, Image, Alert, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import FormField from '../../components/FormField';
 import { Link, useRouter } from 'expo-router';
-import { images } from '../../constants';
+import { Video } from 'expo-av';
 import CustomButton from '../../components/CustomButton';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
@@ -15,7 +14,7 @@ const SignUp = () => {
     email: '',
     password: ''
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
@@ -42,23 +41,41 @@ const SignUp = () => {
       // Navigate to the home screen after successful sign-up
       router.replace('/onboarding');
     } catch (error) {
-      Alert.alert("Error", error.message);
-    } finally {
+      if (error.code === 'auth/email-already-in-use') {
+        // Redirect to the sign-in page if the email is already in use
+        Alert.alert('Email is already in use');
+        router.replace('/sign-in');
+      } else {
+        // Handle other errors
+        console.error(error);
+      }    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <View className="bg-white h-full">
+      <Video
+          source={require('../../assets/images/splash.mp4')}
+          style={styles.video}
+          resizeMode="cover"
+          isLooping
+          shouldPlay
+          isMuted
+        />
+        <View style={styles.overlay} />
+
+        <View style={styles.logoContainer}>
+          <Image source={require('../../assets/images/logowhite.png')} style={styles.logo} />
+        </View>
       <ScrollView>
-        <View className='w-full justify-center h-full px-4 my-6'>
-          <Image 
-            source={images.logo}
-            resizeMode='contain'
-            className='w-[115px] h-[35px]'
-          />
-          <Text className='text-2xl text-white text-semibold mt-10 font-psemibold'>
-            Sign Up to Aora
+        <View style={styles.contentContainer} className='w-full justify-center h-full px-4 my-6'>
+          
+          <Text className='text-2xl text-black text-semibold mt-10 font-oregular'>
+            Nice to meet you!
+          </Text>
+          <Text style={styles.subheading}>
+            Let's get you signed up.
           </Text>
           <FormField 
             title='Email'
@@ -66,6 +83,7 @@ const SignUp = () => {
             handleChangeText={(e) => setForm({...form, email: e})}
             otherStyles='mt-7'
             keyboardType='email-address'
+            placeholder={'Email'}
           />
           <FormField 
             title='Password'
@@ -75,7 +93,10 @@ const SignUp = () => {
                password: e
               })}
             otherStyles='mt-7'
-            secureTextEntry
+            secureTextEntry={!showPassword} 
+            placeholder={'Password'}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
           />
           <CustomButton 
             title='Sign Up'
@@ -84,20 +105,70 @@ const SignUp = () => {
             isLoading={isSubmitting}
           />
           <View className='justify-center pt-5 flex-row gap-2'>
-            <Text className='text-lg text-gray-100 font-pregular'>
+            <Text className='text-lg text-lightgray font-oregular'>
               Already have an account?
             </Text>
             <Link 
               href='/sign-in'
-              className='text-lg font-psemibold text-secondary'
+              className='text-lg font-obold text-black'
             >
               Sign In
             </Link>
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    paddingTop: '95%',
+  },
+  video: {
+    position: 'absolute',
+    height: '50%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+    ...StyleSheet.absoluteFillObject,
+  },
+  welcome: {
+    marginBottom: 20,
+  },
+  logoContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '50%',
+  },
+  logo: {
+    width: 200,
+    height: 200,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    height: '50%',
+  },
+  subheading: {
+    fontSize: 18,
+    color: 'gray',
+    fontFamily: 'Optima',
+    marginTop: 5,
+    marginBottom: 20,
+  }
+});
 
 export default SignUp;

@@ -1,9 +1,9 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, Text, View, Image } from 'react-native';
+import { ScrollView, Text, View, Image, StyleSheet } from 'react-native';
 import { Link, Redirect, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { Video } from 'expo-av';
 import { images } from '../constants';
 import CustomButton from '../components/CustomButton';
 import { useGlobalContext } from '../context/GlobalProvider';
@@ -14,53 +14,83 @@ export default function App() {
   if(!loading && isLogged) return <Redirect href='/home'/>;
   console.log('isLogged:', isLogged, 'isLoading:', loading);
 
-
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <View className="bg-primary h-full" style={styles.container}>
+      <Video
+          source={require('../assets/images/splash.mp4')}
+          style={styles.video}
+          resizeMode="cover"
+          isLooping
+          shouldPlay
+          isMuted
+        />
+        <View style={styles.overlay} />
+
       <ScrollView contentContainerStyle={{ height: '100%'}}>
         <View className="w-full justify-center items-center min-h-[85vh] px-4">
           <Image 
-            source={images.logo}
+            source={require('../assets/images/logowhite.png')}
             className="w-[130px] h-[84px]"
             resizeMode='contain'
+            style={styles.logo}
           />
-
-          <Image 
-            source={images.cards}
-            className="max-w-[380px] w-full h-[300px]"
-            resizeMode='contain'
-          />
-
           <View className='relative mt-5'>
-            <Text className="text-3xl text-white font-bold text-center">
-              Discover Endless Possibilities with {' '}
-              <Text className='text-secondary-200'>
-                 Aora
-              </Text>
+            <Text style={styles.title} className='font-oregular'>
+              Dating. Without the awkward conversation.
+            
             </Text>
-            <Image 
-              source={images.path}
-              className='w-[136px] h-[15px] absolute -bottom-2 -right-8'
-              resizeMode='contain'
-            />
 
           </View>
           <Text className='text-sm font-pregular text-gray-100 mt-7 text-center'>
-            Where creativity meets innovation: embark on a journey of limitless exploration with Aora
+            Meet people who...
           </Text>
 
-          <CustomButton 
-            title="Continue with email"
-            handlePress={() => router.push('/sign-in')} //sign-in
-            containerStyles='w-full mt-7'
-          />
+          <View style={styles.buttonContainer}>
+            <CustomButton 
+              title="Continue with email"
+              handlePress={() => router.push('/sign-in')}
+              containerStyles='w-full mt-7'
+            />
+          </View>
           
         </View>
       </ScrollView>
 
       <StatusBar backgroundColor='#161622' style='light'/>
-    </SafeAreaView>
+    </View>
   );
 }
 
+const styles = StyleSheet.create({
 
+  video: {
+    position: 'absolute',
+    height: '100%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+    ...StyleSheet.absoluteFillObject,
+  },
+  title: {
+    fontSize: 24,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 200,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    height: '100%',
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    padding: 20,
+  },
+});

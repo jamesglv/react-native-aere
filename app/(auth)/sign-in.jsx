@@ -1,11 +1,9 @@
 import { View, Text, ScrollView, Image, Alert, StyleSheet, StatusBar } from 'react-native';
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import FormField from '../../components/FormField';
 import { Link, useRouter } from 'expo-router';
 import { Video } from 'expo-av';
 
-import { images } from '../../constants';
 import CustomButton from '../../components/CustomButton';
 // Firebase imports
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -64,7 +62,7 @@ const SignIn = () => {
           
           
           <Text style={styles.welcome} className='text-2xl text-black text-semibold mt-10 font-oregular'>
-            Welcome back
+            Nice to see you again.
           </Text>
 
           <FormField 
