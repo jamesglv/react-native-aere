@@ -1,43 +1,63 @@
-import { View, Text, TextInput, Image, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { Text, View, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 
 import { icons } from '../constants'
 
-const FormField = ({ title, value, placeholder, handleChangeText, otherStyles, ...props }) => {
-
-    const [showPassword, setShowPassword] = useState(false)
-
+const FormField = ({ title, value, placeholder, handleChangeText, showPassword, setShowPassword, ...props }) => {
     return (
-        <View className={`space-y-2 ${otherStyles}`}>
-            <Text className='text-base text-gray-100 font-pmedium'>
-                {title}
-            </Text>
-
-            <View className='border-2 border-black-200 w-full h-16 px-4 bg-black-100 rounded-2xl focus:border-secondary items-center flex-row'>
+        <>
+            
+            <View style={styles.inputContainer}>
                 <TextInput 
-                    className='flex-1 text-white font-psemibold text-base'
+                    style={styles.textInput}
                     value={value}
                     placeholder={placeholder}
-                    placeholderTextColor='#7b7b8b'
+                    placeholderTextColor='lightgray'
                     onChangeText={handleChangeText}
                     secureTextEntry={title === 'Password' && !showPassword}
                     {...props}
                 />
 
                 {title === 'Password' && (
-                    <TouchableOpacity onPress={() => 
-                        setShowPassword(!showPassword)}>
-                            <Image 
-                                source={ !showPassword ? icons.eye : icons.eyehide }
-                                className='w-6 h-6'
-                                resizeMode='contain'
-                            />
-
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                        <Image 
+                            source={ !showPassword ? icons.eye : icons.eyehide }
+                            style={styles.icon}
+                        />
                     </TouchableOpacity>
                 )}
             </View>
-        </View>
-    )
-}
+        </>
+    );
+};
 
-export default FormField
+const styles = StyleSheet.create({
+    textBase: {
+        fontSize: 16,
+        color: 'black',
+        fontFamily: 'Optima',
+    },
+    inputContainer: {
+        borderBottomWidth: 1,
+        borderBottomColor: 'gray',
+        width: '95%',
+        height: 54,
+        paddingHorizontal: 16,
+        marginHorizontal: 8,
+        alignItems: 'center',
+        flexDirection: 'row',
+        marginBottom: 20,
+    },
+    textInput: {
+        flex: 1,
+        color: 'black',
+        fontFamily: 'Optima',
+        fontSize: 16,
+    },
+    icon: {
+        height: 24,
+        width: 24,
+    },
+});
+
+export default FormField;

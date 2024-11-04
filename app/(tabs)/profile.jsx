@@ -48,7 +48,6 @@ const Profile = () => {
     try {
       await signOut(FIREBASE_AUTH);
       router.replace('/sign-in');  // Navigate to sign-in screen after logout
-      Alert.alert('Success', 'You have logged out successfully.');
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -77,7 +76,7 @@ const Profile = () => {
           colors={['transparent', 'rgba(0, 0, 0, 0.8)']} // Gradient from transparent to black
           style={styles.gradient}
         />
-        <Text style={styles.userName}>{name}</Text>
+        <Text style={styles.userName} className="font-oregular">{name}</Text>
       </View>
 
       <View style={styles.profileTitleContainer}>
@@ -186,8 +185,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     color: '#fff',
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
     zIndex: 10,
   },
   profileTitleContainer: {

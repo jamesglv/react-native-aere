@@ -55,8 +55,10 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-uuid": "^2.0.2",
     "react-native-vector-icons": "^10.2.0",
+    "react-native-video": "^6.7.0",
     "rn-range-slider": "^2.2.2",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "expo-av": "~14.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
