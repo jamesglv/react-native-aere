@@ -12,6 +12,7 @@ import { CheckBox } from 'react-native-elements';  // Import CheckBox from react
 import { Ionicons } from '@expo/vector-icons';  // Icon library for back button
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker
 import { fetchUserData, updateUserDocument, uploadPhoto, deletePhoto } from '../firebaseActions';  // Import the function to fetch data selectively
+import ProfileButton from '../components/ProfileButton';
 
 const EditProfile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -198,7 +199,7 @@ const EditProfile = () => {
                     style={styles.deleteButton}
                     onPress={() => handleDeletePhoto(index)}
                   >
-                    <Text style={styles.deleteText}>X</Text>
+                  <Ionicons name="close-outline" style={styles.deleteIcon} size={18}/>
                   </TouchableOpacity>
                 )}
               </>
@@ -207,7 +208,7 @@ const EditProfile = () => {
                 style={styles.addButton}
                 onPress={() => handleUploadPhoto(index)}
               >
-                <Text style={styles.addText}>+</Text>
+                <Ionicons name="add-outline" style={styles.addIcon} size={30}/>
               </TouchableOpacity>
             )}
           </View>
@@ -226,26 +227,28 @@ const EditProfile = () => {
                 navigation.goBack(); // Navigate back after saving
             }}
             >
-            <Ionicons name="chevron-back" size={24} color="#fff" />
+            <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-      <Text style={styles.header}>Edit Profile</Text>
+      <Text style={styles.header} className='font-oregular'>Edit Profile</Text>
 
       {/* Name input */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Name</Text>
+        <Text style={styles.sectionTitle} className='font-oregular'>Name</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter your name"
           value={name}
           onChangeText={setName}
+          className='font-oregular'
         />
       </View>
 
       {/* Photo upload grid */}
+      <Text style={styles.sectionTitle} className='font-oregular'>Photos</Text>
       {renderPhotoGrid()}
 
       {/* Private photo grid */}
-      <Text style={styles.sectionTitle}>Private Photos</Text>
+      <Text style={styles.sectionTitle} className='font-oregular'>Private Album</Text>
       <View style={styles.photoGrid}>
         {Array.from({ length: 6 }).map((_, index) => (
           <View key={index} style={styles.photoBox}>
@@ -254,15 +257,13 @@ const EditProfile = () => {
             ) : privatePhotos[index] ? (
               <>
                 <Image source={{ uri: privatePhotos[index] }} style={styles.photo} />
-                {privatePhotos.length > 1 && (
                   <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeletePhoto(index, true)}>
-                    <Text style={styles.deleteText}>X</Text>
+                    <Ionicons name="close-outline" style={styles.deleteIcon} size={18}/>
                   </TouchableOpacity>
-                )}
               </>
             ) : (
               <TouchableOpacity style={styles.addButton} onPress={() => handleUploadPhoto(index, true)}>
-                <Text style={styles.addText}>+</Text>
+                <Ionicons name="add-outline" style={styles.addIcon} size={30}/>
               </TouchableOpacity>
             )}
           </View>
@@ -271,55 +272,75 @@ const EditProfile = () => {
 
       {/* Bio section */}
       <View style={styles.section}>
+      <Text style={styles.sectionTitle} className='font-oregular'>About Me</Text>
+
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Tell us about yourself (Bio)"
+          placeholder="Tell us about yourself"
           value={bio}
           onChangeText={setBio}
           multiline
           numberOfLines={4}
+          className='font-oregular'
         />
       </View>
 
       {/* Gender Selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Gender</Text>
+        <Text style={styles.sectionTitle} className='font-oregular'>Gender</Text>
 
         <CheckBox
           title="Male"
           checked={gender === 'Male'}
           onPress={() => handleGenderChange('Male')}
+          containerStyle={styles.checkBoxContainer}
+          textStyle={styles.fontOregular}
+          checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
+          uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
         />
         <CheckBox
           title="Female"
           checked={gender === 'Female'}
           onPress={() => handleGenderChange('Female')}
+          containerStyle={styles.checkBoxContainer} 
+          textStyle={styles.fontOregular}
+          checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
+          uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
         />
         <CheckBox
           title="Non-Binary"
           checked={gender === 'Non-Binary'}
           onPress={() => handleGenderChange('Non-Binary')}
+          containerStyle={styles.checkBoxContainer} 
+          textStyle={styles.fontOregular}
+          checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
+          uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
         />
       </View>
 
       {/* Living With Selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Living With</Text>
+        <Text style={styles.sectionTitle} className='font-oregular'>Living With</Text>
         {['HSV1O', 'HSV1G', 'HSV2O'].map((condition) => (
           <CheckBox
             key={condition}
             title={condition}
             checked={livingWith.includes(condition)}
             onPress={() => handleLivingWithChange(condition)}
+            containerStyle={styles.checkBoxContainer}
+            textStyle={styles.fontOregular}
+            checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
+          uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
           />
         ))}
       </View>
-        <TouchableOpacity
-        style={styles.updateLocationButton}
-        onPress={() => router.push('/locationUpdate')}
-        >
-        <Text style={styles.updateLocationButtonText}>Update Location</Text>
-        </TouchableOpacity>
+      <Text style={styles.sectionTitle} className='font-oregular'>Location</Text>
+
+        <ProfileButton
+          title="Update Location"
+          onPress={() => router.push('/locationUpdate')}
+        />
+        <View style={{marginBottom: 80}}></View>
 
     </ScrollView>
   );
@@ -334,7 +355,6 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
     paddingTop: 50,
@@ -343,34 +363,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
     marginBottom: 10,
+    marginTop: 20,
   },
   backButton: {
     position: 'absolute',
     top: 65,
     left: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 25,
     padding: 10,
     zIndex: 10,
   },
   input: {
-    backgroundColor: '#fff',
+    //backgroundColor: '#fff',
+    fontSize: 16,
     padding: 10,
-    borderRadius: 5,
     borderColor: '#ddd',
-    borderWidth: 1,
-    marginBottom: 15,
+    borderBottomWidth: 1,
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
-    backgroundColor: '#fff',
     padding: 10,
     borderColor: '#ddd',
-    borderWidth: 1,
+    bottomBorderWidth: 1,
     borderRadius: 5,
   },
   photoGrid: {
@@ -404,25 +421,27 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'red',
-    borderRadius: 10,
+    top: -10,
+    right: -10,
+    backgroundColor: 'black',
+    borderRadius: 12,
     padding: 2,
   },
-  deleteText: {
+  deleteIcon: {
     color: '#fff',
-    fontWeight: 'bold',
   },
-  saveButton: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
+  checkBoxContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderColor: '#f0f0f0',
+    borderWidth: 2,
+    borderRadius: 25,
+    marginBottom: 8,
   },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  fontOregular: {
+    fontFamily: 'Optima-Regular',
+    fontSize: 16,
+    fontWeight: 'light'
   },
   updateLocationButton: {
     backgroundColor: '#007bff',

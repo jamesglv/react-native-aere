@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';  // Import useRouter from expo-router
 import { Switch } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchUserData, updateUserDocument } from '../../firebaseActions'; // Import fetchUserProfileData function
+import ProfileButton from '../../components/ProfileButton';
 
 const Profile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -79,36 +80,75 @@ const Profile = () => {
         <Text style={styles.userName}>{name}</Text>
       </View>
 
+      <View style={styles.profileTitleContainer}>
+         <Text style={styles.profileTitle} className="font-oregular">Profile</Text>
+      </View>
       {/* Button to edit profile */}
-      <TouchableOpacity
-        style={styles.editProfileButton}
+      <ProfileButton
+        title="Edit Profile"
         onPress={() => router.push('/editProfile')}
-      >
-        <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-      </TouchableOpacity>
-
-      {/* Button to manage private requests */}
-      <TouchableOpacity
-        style={styles.manageRequestsButton}
+      />
+      <ProfileButton
+        title="Manage Private Requests"
         onPress={() => router.push('/privateRequests')}
-      >
-        <Text style={styles.manageRequestsText}>Manage Private Requests</Text>
-      </TouchableOpacity>
+      />
 
       {/* Pause toggle */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', margin: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', marginRight: 10 }}>Pause</Text>
+      <View style={styles.pauseToggleContainer}>
+        <Text style={styles.pauseTitle} className='font-oregular'>Pause</Text>
         <Switch
           value={isPaused}
           onValueChange={togglePause} // Toggle the pause state
+          style={styles.pauseToggle}
         />
       </View>
+      <View style={styles.pauseTextContainer}>
+        <Text style={styles.pauseText} className='font-oregular'>Pausing hides your profile from appearing in the</Text>
+        <Text style={styles.pauseText} className='font-oregular'>explore feed. You can still view your likes and</Text>
+        <Text style={styles.pauseText} className='font-oregular'>matches.</Text>
+
+      </View>
+
+      {/* Account Section */}
+      <View style={styles.profileTitleContainer}>
+         <Text style={styles.profileTitle} className="font-oregular">Account</Text>
+      </View>
+      <ProfileButton
+        title="Notifications"
+        onPress={() => router.push()}
+      />
+      <ProfileButton
+        title="Blocked List"
+        onPress={() => router.push()}
+      />
+      <ProfileButton
+        title="Change Password"
+        onPress={() => router.push()}
+      />
+
+      {/* Legal Section */}
+      <View style={styles.profileTitleContainer}>
+         <Text style={styles.profileTitle} className="font-oregular">Legal</Text>
+      </View>
+      <ProfileButton
+        title="Privacy Policy"
+        onPress={() => router.push()}
+      />
+      <ProfileButton
+        title="Terms of Service"
+        onPress={() => router.push()}
+      />
+      
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account Settings</Text>
-
+        <View>
+          
+        </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Log Out</Text>
+          <Text style={styles.logoutButtonText} className='font-oregular'>Log Out</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText} className='font-oregular'>Delete Account</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -126,7 +166,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     height: 250, 
-    marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -151,6 +190,49 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     zIndex: 10,
   },
+  profileTitleContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: '#ececec',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginLeft: 20,
+    marginTop: 40,
+    width: '95%',
+  },
+  profileTitle: {
+    width: 200,
+    fontSize: 24,
+    color: '#333',
+    marginBottom: 10,
+  },
+  pauseToggleContainer: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'center', 
+    marginLeft: 20,
+    marginTop: 10,
+  },
+  pauseTitle: { 
+    fontSize: 18, 
+    marginRight: 10 
+  },
+  pauseToggle: {
+    marginTop: 10,
+    marginRight: 25,
+  },
+  pauseTextContainer: {
+    marginLeft: 20,
+    marginTop: 10,
+    width: '90%',
+    borderBottomWidth: 1,
+    borderColor: '#ececec',
+    paddingBottom: 20,
+  },
+  pauseText: {
+    fontSize: 16,
+    color: '#333',
+  },
   section: {
     marginBottom: 30,
     padding: 20,
@@ -162,14 +244,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logoutButton: {
-    backgroundColor: '#ff6347',
+    borderColor: '#ececec',
+    borderWidth: 1,
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
+    marginBottom: 10,
   },
   logoutButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: 'black',
+    fontSize: 16,
   },
   editProfileButton: {
     backgroundColor: '#007bff',

@@ -140,14 +140,14 @@ const PrivateRequests = () => {
     >
       <View style={styles.userInfo}>
         <Image source={{ uri: userDetails[item]?.photos }} style={styles.userPhoto} />
-        <Text style={styles.userText}>{userDetails[item]?.name || 'Loading...'}</Text>
+        <Text style={styles.userText}  className="font-oregular">{userDetails[item]?.name || 'Loading...'}</Text>
       </View>
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(item)}>
-          <Text style={styles.acceptText}>Accept</Text>
+          <Ionicons name="checkmark-outline" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item)}>
-          <Text style={styles.deleteText}>Delete</Text>
+          <Ionicons name="close-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -158,10 +158,10 @@ const renderAccepted = (item) => (
   <View style={styles.acceptedContainer} key={item}>
     <View style={styles.userInfo}>
       <Image source={{ uri: userDetails[item]?.photos }} style={styles.userPhoto} />
-      <Text style={styles.userText}>{userDetails[item]?.name || 'Loading...'}</Text>
+      <Text style={styles.userText} className="font-oregular">{userDetails[item]?.name || 'Loading...'}</Text>
     </View>
     <TouchableOpacity style={styles.removeButton} onPress={() => handleRemove(item)}>
-      <Text style={styles.removeText}>Remove</Text>
+      <Ionicons name="close-outline" size={24} color="black" />
     </TouchableOpacity>
   </View>
 );
@@ -173,30 +173,30 @@ const renderAccepted = (item) => (
         style={styles.backButton}
         onPress={() => navigation.goBack()}  // Ensure this is `navigation.goBack()`
       >
-        <Ionicons name="chevron-back" size={24} color="#fff" />
+        <Ionicons name="chevron-back" size={24} color="black" />
       </TouchableOpacity>
 
 
       {/* Main content */}
       <ScrollView style={styles.container}>
-        <Text style={styles.title}>Private Photo Requests</Text>
+        <Text style={styles.title} className="font-oregular">Private Album Requests</Text>
 
         {/* Display requests */}
-        <Text style={styles.sectionTitle}>Requests</Text>
+        <Text style={styles.sectionTitle} className="font-oregular">Requests</Text>
         {isLoading ? (
-          <Text>Loading requests...</Text>
+          <Text style={styles.noRequestsText} className="font-oregular">Loading requests...</Text>
         ) : requests.length > 0 ? (
           requests.map(renderRequest)
         ) : (
-          <Text style={styles.noRequestsText}>No requests available.</Text>
+          <Text style={styles.noRequestsText} className="font-oregular">No requests available.</Text>
         )}
 
         {/* Display accepted requests */}
-        <Text style={styles.sectionTitle}>Accepted Requests</Text>
+        <Text style={styles.sectionTitle} className="font-oregular">Accepted Requests</Text>
         {accepted.length > 0 ? (
           accepted.map(renderAccepted)
         ) : (
-          <Text style={styles.noRequestsText}>No accepted requests.</Text>
+          <Text style={styles.noRequestsText} className="font-oregular">No accepted requests.</Text>
         )}
       </ScrollView>
     </>
@@ -212,15 +212,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
     paddingTop: 50,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    marginVertical: 20,
   },
   noRequestsText: {
     fontSize: 16,
@@ -267,14 +265,14 @@ const styles = StyleSheet.create({
     marginRight: 10, // Adjust spacing between photo and name
   },
   userText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
+    paddingLeft: 10,
   },
   actionsContainer: {
     flexDirection: 'row',
   },
   acceptButton: {
-    backgroundColor: 'green',
     padding: 10,
     borderRadius: 5,
     marginRight: 10,
@@ -284,7 +282,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   deleteButton: {
-    backgroundColor: 'red',
     padding: 10,
     borderRadius: 5,
   },
@@ -296,13 +293,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 65,
     left: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 25,
     padding: 10,
     zIndex: 10,
   },
   removeButton: {
-    backgroundColor: 'orange',
     padding: 10,
     borderRadius: 5,
   },
