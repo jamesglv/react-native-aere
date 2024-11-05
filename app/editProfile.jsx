@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';  // Icon library for back button
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker
 import { fetchUserData, updateUserDocument, uploadPhoto, deletePhoto } from '../firebaseActions';  // Import the function to fetch data selectively
 import ProfileButton from '../components/ProfileButton';
+import Loading from'../components/Loading';
 
 const EditProfile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -21,6 +22,7 @@ const EditProfile = () => {
 
 
   // State for user profile fields
+  const [isLoading, setIsLoading] = useState(true);
   const [name, setName] = useState('');  // State for user name
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState([]);
@@ -28,6 +30,7 @@ const EditProfile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingRegularIndex, setUploadingRegularIndex] = useState(null);
   const [uploadingPrivateIndex, setUploadingPrivateIndex] = useState(null);
+  const [uploadingIndex, setUploadingIndex] = useState(false);
 
   const [gender, setGender] = useState('');
   const [livingWith, setLivingWith] = useState([]);
@@ -61,6 +64,8 @@ const EditProfile = () => {
     } catch (error) {
       console.error('Error fetching user data:', error);
       Alert.alert('Error', 'Failed to load user data.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,6 +89,8 @@ const EditProfile = () => {
       });
   
       if (!pickerResult.canceled) {
+        setUploadingIndex(index); // Set the uploading index
+
         const uri = pickerResult.assets[0].uri;
   
         // Convert image to base64
@@ -110,6 +117,8 @@ const EditProfile = () => {
     } catch (error) {
       console.error('Error uploading photo:', error);
       Alert.alert('Error', 'Failed to upload photo. Please try again later.');
+    } finally {
+      setUploadingIndex(null); // Reset the uploading index
     }
   };
   
@@ -189,7 +198,7 @@ const EditProfile = () => {
       <View style={styles.photoGrid}>
         {Array.from({ length: 6 }).map((_, index) => (
           <View key={index} style={styles.photoBox}>
-            {uploadingRegularIndex === index ? (
+            {uploadingIndex === index ? (
               <MaterialIndicator size={30} color="black" />
             ) : photos[index] ? (
               <>
@@ -216,6 +225,10 @@ const EditProfile = () => {
       </View>
     );
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

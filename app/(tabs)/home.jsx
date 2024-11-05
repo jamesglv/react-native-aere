@@ -11,10 +11,11 @@ import FilterModal from '../../components/FilterModal';
 import { fetchUserData, fetchProfiles, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum } from '../../firebaseActions';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
-
+import Loading from'../../components/Loading';
 const { width, height } = Dimensions.get('window');
 
 const Home = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [profiles, setProfiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -29,6 +30,7 @@ const Home = () => {
   const [currentUserData, setCurrentUserData] = useState({ likedUsers: [], declinedUsers: [] });
   const [showModal, setShowModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+
 
   useEffect(() => {
     const user = FIREBASE_AUTH.currentUser;
@@ -72,7 +74,12 @@ const Home = () => {
   };
 
   const loadProfiles = async () => {
-    await fetchProfiles(currentUserId, currentUserData.likedUsers, currentUserData.declinedUsers, setProfiles);
+    try {
+      await fetchProfiles(currentUserId, currentUserData.likedUsers, currentUserData.declinedUsers, setProfiles);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching profiles:", error);
+    }
   };
 
   const filterProfiles = () => {
@@ -135,6 +142,10 @@ const Home = () => {
       setSelectedGenders([...selectedGenders, gender]);
     }
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <>
@@ -218,6 +229,11 @@ const styles = StyleSheet.create({
   adjustFiltersButtonText: { color: '#fff', fontSize: 18, margin: 5 },
   profilesCarousel: { alignItems: 'top' },
   settingsButton: { position: 'absolute', top: 40, right: 20, zIndex: 2, backgroundColor: 'rgba(0, 0, 0, 0.6)', padding: 15, borderRadius: 40, height: 50, width: 50, marginTop: 10 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default Home;
