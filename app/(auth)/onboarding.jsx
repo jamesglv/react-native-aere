@@ -143,9 +143,14 @@ const Onboarding = () => {
 
   // Handler to toggle "Interested In" selections
   const toggleInterest = (gender) => {
-    setInterested((prev) =>
-      prev.includes(gender) ? prev.filter((item) => item !== gender) : [...prev, gender]
-    );
+    setInterested((prevInterested) => {
+      if (prevInterested.includes(gender)) {
+        return prevInterested.filter((item) => item !== gender);
+      } else {
+        return [...prevInterested, gender];
+      }
+    });
+    console.log('interested', interested);
   };
 
   const toggleLivingWith = (option) => {
@@ -232,7 +237,6 @@ const Onboarding = () => {
       return;
     }
   
-    const interestedGenders = Object.keys(interested).filter(gender => interested[gender]);
     const age = calculateAge(day, month, year);
     try {
   
@@ -254,7 +258,7 @@ const Onboarding = () => {
         bio,
         photos: photoUrls,
         location,
-        interested: interestedGenders,
+        interested: interested,
         livingWith,
         onboardingCompleted: true,
         paused: false,
@@ -312,7 +316,7 @@ const Onboarding = () => {
       );
     } else if (item.id === '2') {
       return (
-        <View style={[styles.page, { width }]}>
+        <View style={[{ width, paddingTop: '70%', alignItems: 'center' }]}>
           <Text style={styles.title}>{item.title}</Text>
           <View style={styles.pickerContainer}>
             <Picker
@@ -408,7 +412,6 @@ const Onboarding = () => {
           <View style={styles.interestedContainer}>
           <View style={styles.checkboxContainer}>
             <TouchableOpacity
-              key={interested}
               style={styles.checkbox}
               onPress={() => toggleInterest('Male')}
             >
@@ -422,7 +425,6 @@ const Onboarding = () => {
           </View>
           <View style={styles.checkboxContainer}>
             <TouchableOpacity
-              key={interested}
               style={styles.checkbox}
               onPress={() => toggleInterest('Female')}
             >
@@ -436,7 +438,6 @@ const Onboarding = () => {
           </View>
           <View style={styles.checkboxContainer}>
             <TouchableOpacity
-              key={interested}
               style={styles.checkbox}
               onPress={() => toggleInterest('Non-Binary')}
             >

@@ -321,7 +321,7 @@ const EditProfile = () => {
       {/* Living With Selection */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle} className='font-oregular'>Living With</Text>
-        {['HSV1O', 'HSV1G', 'HSV2O'].map((condition) => (
+        {['HSV1-O', 'HSV1-G', 'HSV2-O', 'HSV2-G', 'HPV', 'HIV', 'Hepatitis B', 'Hepatitis C', 'Other'].map((condition) => (
           <CheckBox
             key={condition}
             title={condition}
