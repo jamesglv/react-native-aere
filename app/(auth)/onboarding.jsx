@@ -10,19 +10,20 @@ import MapView, { Marker } from 'react-native-maps';  // Google Maps
 import * as Location from 'expo-location';  // Expo location services
 import uuid from 'react-native-uuid';
 import { saveUserProfile, uploadUserPhoto, calculateUserAge } from '../../firebaseActions';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
 // Onboarding pages data
 const onboardingPages = [
-  { id: '1', title: 'Enter Your Name' },
+  { id: '1', title: "Let's start with your name." },
   { id: '2', title: 'Enter Your Birthdate' },
   { id: '3', title: 'Select Your Gender' },
-  { id: '4', title: 'Interested In' },  // New page for selecting interested gender
+  { id: '4', title: 'Who are you looking for?' },  // New page for selecting interested gender
   { id: '5', title: 'What are you living with?' },
-  { id: '6', title: 'Enter Your Bio' },
-  { id: '7', title: 'Upload Your Photos' },
-  { id: '8', title: 'Set Your Location' },
+  { id: '6', title: 'Share something about you' },
+  { id: '7', title: 'Upload your public album' },
+  { id: '8', title: "Finally, let's set your location" },
 ];
 
 const Onboarding = () => {
@@ -48,11 +49,7 @@ const Onboarding = () => {
     longitudeDelta: 0.0421,
   });  // Default region for the map
   // New state to track "Interested In" selection
-  const [interested, setInterested] = useState([{
-    male: false,
-    female: false,
-    nonBinary: false,
-  }]);
+  const [interested, setInterested] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -146,7 +143,9 @@ const Onboarding = () => {
 
   // Handler to toggle "Interested In" selections
   const toggleInterest = (gender) => {
-    setInterested((prev) => ({ ...prev, [gender]: !prev[gender] }));
+    setInterested((prev) =>
+      prev.includes(gender) ? prev.filter((item) => item !== gender) : [...prev, gender]
+    );
   };
 
   const toggleLivingWith = (option) => {
@@ -279,6 +278,23 @@ const Onboarding = () => {
     });
   };
 
+  const LivingWithCheckbox = ({ livingWith, toggleLivingWith, styles, title }) => (
+    <View style={styles.checkboxContainer}>
+      <TouchableOpacity
+        key={livingWith}
+        style={styles.checkbox}
+        onPress={() => toggleLivingWith(title)}
+      >
+        <Ionicons
+          name={livingWith.includes(title) ? 'checkmark-circle' : 'ellipse-outline'}
+          size={24}
+          color={livingWith.includes(title) ? 'white' : '#ddd'}
+        />
+        <Text style={styles.checkboxLabel} className='font-oregular'>{title}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   // Render the content for each page
   const renderPage = ({ item }) => {
     if (item.id === '1') {
@@ -288,6 +304,7 @@ const Onboarding = () => {
           <TextInput
             style={styles.input}
             placeholder="Enter your name"
+            placeholderTextColor={'#949494'}
             value={name}
             onChangeText={setName}
           />
@@ -301,6 +318,7 @@ const Onboarding = () => {
             <Picker
               selectedValue={day}
               style={styles.picker}
+              itemStyle={styles.pickerItemStyle} // Apply item style here
               onValueChange={(itemValue) => setDay(itemValue)}
             >
               {[...Array(31).keys()].map((_, i) => (
@@ -310,6 +328,7 @@ const Onboarding = () => {
             <Picker
               selectedValue={month}
               style={styles.picker}
+              itemStyle={styles.pickerItemStyle} // Apply item style here
               onValueChange={(itemValue) => setMonth(itemValue)}
             >
               {[
@@ -322,6 +341,7 @@ const Onboarding = () => {
             <Picker
               selectedValue={year}
               style={styles.picker}
+              itemStyle={styles.pickerItemStyle} // Apply item style here
               onValueChange={(itemValue) => setYear(itemValue)}
             >
               {[...Array(100).keys()].map((_, i) => (
@@ -336,15 +356,48 @@ const Onboarding = () => {
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
           <View style={styles.genderContainer}>
-            <TouchableOpacity onPress={() => setGender('Male')}>
-              <Text style={styles.genderOption}>{gender === 'Male' ? '✓ Male' : 'Male'}</Text>
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                key={gender}
+                style={styles.checkbox}
+                onPress={() => setGender('Male')}
+              >
+                <Ionicons
+                  name={gender.includes('Male') ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={24}
+                  color={gender.includes('Male') ? 'white' : '#ddd'}
+                />
+                <Text style={styles.checkboxLabel} className='font-oregular'>Male</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                key={gender}
+                style={styles.checkbox}
+                onPress={() => setGender('Female')}
+              >
+                <Ionicons
+                  name={gender.includes('Female') ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={24}
+                  color={gender.includes('Female') ? 'white' : '#ddd'}
+                />
+                <Text style={styles.checkboxLabel} className='font-oregular'>Female</Text>
+              </TouchableOpacity>
+          </View>
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              key={gender}
+              style={styles.checkbox}
+              onPress={() => setGender('Non-Binary')}
+            >
+              <Ionicons
+                name={gender.includes('Non-Binary') ? 'checkmark-circle' : 'ellipse-outline'}
+                size={24}
+                color={gender.includes('Non-Binary') ? 'white' : '#ddd'}
+              />
+              <Text style={styles.checkboxLabel} className='font-oregular'>Non-Binary</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setGender('Female')}>
-              <Text style={styles.genderOption}>{gender === 'Female' ? '✓ Female' : 'Female'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setGender('Non-binary')}>
-              <Text style={styles.genderOption}>{gender === 'Non-binary' ? '✓ Non-binary' : 'Non-binary'}</Text>
-            </TouchableOpacity>
+          </View>
           </View>
         </View>
       );
@@ -353,21 +406,48 @@ const Onboarding = () => {
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
           <View style={styles.interestedContainer}>
-            <TouchableOpacity onPress={() => toggleInterest('Male')}>
-              <Text style={styles.checkboxOption}>
-                {interested.male ? '✓ Male' : 'Male'}
-              </Text>
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              key={interested}
+              style={styles.checkbox}
+              onPress={() => toggleInterest('Male')}
+            >
+              <Ionicons
+                name={interested.includes('Male') ? 'checkmark-circle' : 'ellipse-outline'}
+                size={24}
+                color={interested.includes('Male') ? 'white' : '#ddd'}
+              />
+              <Text style={styles.checkboxLabel} className='font-oregular'>Men</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => toggleInterest('Female')}>
-              <Text style={styles.checkboxOption}>
-                {interested.female ? '✓ Female' : 'Female'}
-              </Text>
+          </View>
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              key={interested}
+              style={styles.checkbox}
+              onPress={() => toggleInterest('Female')}
+            >
+              <Ionicons
+                name={interested.includes('Female') ? 'checkmark-circle' : 'ellipse-outline'}
+                size={24}
+                color={interested.includes('Female') ? 'white' : '#ddd'}
+              />
+              <Text style={styles.checkboxLabel} className='font-oregular'>Women</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => toggleInterest('Non-Binary')}>
-              <Text style={styles.checkboxOption}>
-                {interested.nonBinary ? '✓ Non-Binary' : 'Non-Binary'}
-              </Text>
+          </View>
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              key={interested}
+              style={styles.checkbox}
+              onPress={() => toggleInterest('Non-Binary')}
+            >
+              <Ionicons
+                name={interested.includes('Non-Binary') ? 'checkmark-circle' : 'ellipse-outline'}
+                size={24}
+                color={interested.includes('Non-Binary') ? 'white' : '#ddd'}
+              />
+              <Text style={styles.checkboxLabel} className='font-oregular'>Non-Binary</Text>
             </TouchableOpacity>
+          </View>
           </View>
         </View>
       );
@@ -376,15 +456,60 @@ const Onboarding = () => {
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
           <View style={styles.livingWithContainer}>
-            <TouchableOpacity onPress={() => toggleLivingWith('HSV1G')}>
-              <Text style={styles.livingWithOption}>{livingWith.HSV1G ? '✓ HSV1-G' : 'HSV1-G'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => toggleLivingWith('HSV1O')}>
-              <Text style={styles.livingWithOption}>{livingWith.HSV1O ? '✓ HSV1-O' : 'HSV1-O'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => toggleLivingWith('HSV2O')}>
-              <Text style={styles.livingWithOption}>{livingWith.HSV2O ? '✓ HSV2-O' : 'HSV2-O'}</Text>
-            </TouchableOpacity>
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="HSV1-O"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="HSV1-G"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="HSV2-O"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="HSV2-G"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="HPV"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="HIV"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="Hepatitis B"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="Hepatitis C"
+            />
+            <LivingWithCheckbox
+              livingWith={livingWith}
+              toggleLivingWith={toggleLivingWith}
+              styles={styles}
+              title="Other"
+            />
           </View>
         </View>
       );
@@ -395,6 +520,7 @@ const Onboarding = () => {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Tell us about yourself"
+            placeholderTextColor={'#949494'}
             multiline
             numberOfLines={4}
             value={bio}
@@ -404,11 +530,11 @@ const Onboarding = () => {
       );
     } else if (item.id === '7') {
       return (
-        <View style={[styles.page, { width }]}>
+        <View style={[styles.page, { width }, {marginTop: '60%'}]}>
           <Text style={styles.title}>{item.title}</Text>
-          <TouchableOpacity style={styles.button} onPress={pickPhotos}>
-            <Text style={styles.buttonText}>
-              {photos.length < 6 ? 'Pick Photos (Max 6)' : 'Max photos selected'}
+          <TouchableOpacity style={styles.selectPhotosButton} onPress={pickPhotos}>
+            <Text style={styles.photosButtonText}>
+              {photos.length < 6 ? 'Select Images' : 'Max photos selected'}
             </Text>
           </TouchableOpacity>
 
@@ -421,8 +547,8 @@ const Onboarding = () => {
                   style={styles.deleteButton}
                   onPress={() => deletePhoto(index)}
                 >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
-                </TouchableOpacity>
+                    <Ionicons name="close-outline" style={styles.deleteIcon} size={18}/>
+                  </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
@@ -461,6 +587,14 @@ const Onboarding = () => {
         scrollEventThrottle={16}
         scrollEnabled={false}  // Disable swiping
       />
+      {/* Next button */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity onPress={handleNext}>
+          <Text style={styles.buttonText}>
+            {currentPage === onboardingPages.length - 1 ? 'Finish' : 'Next'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Pagination dots */}
       <View style={styles.pagination}>
@@ -475,14 +609,7 @@ const Onboarding = () => {
         ))}
       </View>
 
-      {/* Next button */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity onPress={handleNext}>
-          <Text style={styles.buttonText}>
-            {currentPage === onboardingPages.length - 1 ? 'Finish' : 'Next'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      
     </View>
   );
 };
@@ -502,17 +629,21 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
     color: '#fff',
     marginBottom: 10,
+    fontFamily: 'Optima',
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 1,
+    borderBottomColor: 'white',
+    borderBottomWidth: 1,
+    borderColor: 'white',
     padding: 10,
     width: '80%',
     marginTop: 10,
     fontSize: 18,
+    color: 'white',
+    placeholderTextColor: 'red',
   },
   textArea: {
     height: 100,
@@ -531,14 +662,15 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 100,
     width: '100%',
     alignItems: 'center',
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
+    fontFamily: 'Optima',
+    color: 'white',
+    marginHorizontal: 20,
   },
   pickerContainer: {
     flexDirection: 'row',
@@ -549,10 +681,10 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     width: 110,
-    color: '#fff',  // Text color inside picker
+    color: 'white',  // Text color inside picker
   },
   pickerItemStyle: {
-    color: '#fff',  // Text color for picker items
+    color: 'white',  // Text color for picker items
   },
   genderContainer: {
     flexDirection: 'column',  // Stack vertically
@@ -579,18 +711,19 @@ const styles = StyleSheet.create({
     marginVertical: 10,  // Add spacing between gender options
   },
   button: {
-    backgroundColor: '#ff6347',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 25,
     marginTop: 20,
   },
   photoCarousel: {
+    padding: 40,
     marginTop: 20,
     flexDirection: 'row',
   },
   photoContainer: {
     position: 'relative',
-    marginRight: 10,
+    marginRight: 15,
   },
   photo: {
     width: 100,
@@ -599,15 +732,18 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: '#ff6347',
+    top: -15,
+    right: -15,
+    backgroundColor: 'black',
     padding: 5,
-    borderRadius: 5,
+    borderRadius: 15,
   },
   deleteButtonText: {
     color: '#fff',
     fontSize: 12,
+  },
+  deleteIcon: {
+    color: '#fff',
   },
   interestedContainer: {
     flexDirection: 'column',
@@ -619,6 +755,36 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     marginVertical: 10,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: 'white',
+    borderWidth: 1,
+    borderRadius: 25,
+    width: '100%',
+    padding: 10,
+    marginVertical: 10,
+  },
+  checkbox: {
+    flexDirection: 'row',
+  },
+  checkboxLabel: {
+    marginLeft: 10,
+    fontSize: 18,
+    color: '#fff',
+  },
+  selectPhotosButton: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 25,
+    marginTop: 40,
+  },
+  photosButtonText: {
+    fontSize: 18,
+    color: 'black',
+    fontFamily: 'Optima',
+    paddingHorizontal: 10,
   },
 });
 
