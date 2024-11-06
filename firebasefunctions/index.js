@@ -776,3 +776,53 @@ exports.handleMatch = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'Unable to match user.');
   }
 });
+
+exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to delete account.');
+  }
+
+  const userId = context.auth.uid;
+
+  try {
+    const userDocRef = db.collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'User document not found.');
+    }
+
+    const userData = userDoc.data();
+
+    // Remove specific fields from the user data
+    const { birthdate, bio, email, name, photos, ...filteredUserData } = userData;
+
+    // Add user document to 'deletedUsers' collection
+    await db.collection('deletedUsers').doc(userId).set(filteredUserData);
+
+    // Delete user document from 'users' collection
+    await userDocRef.delete();
+
+    // Delete user's folder in Firebase Storage
+    const bucket = admin.storage().bucket();
+    const [files] = await bucket.getFiles({ prefix: `users/${userId}/` });
+    const deletePromises = files.map(file => file.delete());
+    await Promise.all(deletePromises);
+    
+    // Check if the user exists in Firebase Authentication
+    try {
+      await admin.auth().deleteUser(userId);
+    } catch (authError) {
+      if (authError.code !== 'auth/user-not-found') {
+        throw authError;
+      }
+    }
+    // // Log out the user
+    // await admin.auth().revokeRefreshTokens(userId);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to delete user account.');
+  }
+});

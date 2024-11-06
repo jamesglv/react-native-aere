@@ -368,3 +368,18 @@ export const declineUser = async (currentUserId, targetUserId) => {
     throw error;
   }
 };
+
+export const deleteUserAccount = async () => {
+  const deleteUserAccountFunc = httpsCallable(functions, 'deleteUserAccount');
+  try {
+    const response = await deleteUserAccountFunc();
+    if (response.data.success) {
+      console.log("User account deleted successfully");
+    } else {
+      throw new Error("Failed to delete user account");
+    }
+  } catch (error) {
+    console.error("Error deleting user account:", error);
+    throw error;
+  }
+};

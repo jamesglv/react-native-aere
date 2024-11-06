@@ -7,8 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient 
 import { useRouter } from 'expo-router';  // Import useRouter from expo-router
 import { Switch } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { fetchUserData, updateUserDocument } from '../../firebaseActions'; // Import fetchUserProfileData function
+import { fetchUserData, updateUserDocument, deleteUserAccount } from '../../firebaseActions'; // Import fetchUserProfileData function
 import ProfileButton from '../../components/ProfileButton';
+import DeleteUserModal from '../../components/DeleteUserModal';
+import Loading from '../../components/Loading';
 
 const Profile = () => {
   const currentUser = FIREBASE_AUTH.currentUser; // Get the logged-in user's information
@@ -21,6 +23,8 @@ const Profile = () => {
   const [photos, setPhotos] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // State for the toggle
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false); // State for delete modal visibility
+  const [isLoading, setIsLoading] = useState(false); // State for loading spinner
 
   const fetchAndSetUserProfileData = async () => {
     try {
@@ -63,6 +67,24 @@ const Profile = () => {
       Alert.alert('Error', 'Failed to update pause state.');
     }
   };
+
+  const handleDeleteAccount = async () => {
+    setIsLoading(true);
+    try {
+      await deleteUserAccount();
+      await signOut(FIREBASE_AUTH);
+      router.replace('/sign-in');
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      Alert.alert("Error", "Failed to delete account.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading)  {
+    return <Loading />;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -146,10 +168,24 @@ const Profile = () => {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText} className='font-oregular'>Log Out</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => setIsDeleteModalVisible(true)}>
           <Text style={styles.logoutButtonText} className='font-oregular'>Delete Account</Text>
         </TouchableOpacity>
       </View>
+      {/* Delete User Modal */}
+      <DeleteUserModal
+        isVisible={isDeleteModalVisible}
+        onClose={() => setIsDeleteModalVisible(false)}
+        goToMatches={() => {
+          setIsDeleteModalVisible(false);
+          //router.push('/matches');
+        }}
+        backToLikes={() => {
+          setIsDeleteModalVisible(false);
+          handleDeleteAccount();
+          // Add your delete account logic here
+        }}
+      />
     </ScrollView>
   );
 };

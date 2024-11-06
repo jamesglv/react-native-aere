@@ -7,6 +7,7 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc } from 'firebas
 import uuid from 'react-native-uuid';  // Use react-native-uuid for generating UUIDs
 import { Ionicons } from '@expo/vector-icons';
 import { Timestamp } from 'firebase/firestore';
+import MatchModal from '../components/MatchModal';
 
 import { useNavigation } from '@react-navigation/native';
 import { fetchTargetUserData, handleRequestAccess as handleRequestAccessAction, handleMatch as handleMatchAction, declineUser as declineUserAction, handleSharePrivateAlbum } from '../firebaseActions'; // Import the fetchUserData and handleRequestAccess functions
@@ -127,25 +128,12 @@ const likeProfiles = () => {
   return (
     <>
       <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <Modal
-          visible={isMatchModalVisible}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setIsMatchModalVisible(false)}
-        >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <View style={{ width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10 }}>
-              <Image source={require('../assets/images/rose.jpg')} style={{ width: 100, height: 100, alignSelf: 'center' }} />
-              <Text style={{ fontSize: 20, textAlign: 'center', fontFamily: 'Optima' }}>It's a match!</Text>
-              <TouchableOpacity style={styles.matchesButton} onPress={goToMatches}>
-                <Text style={styles.matchesText} className='font-oregular'>View Matches</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={backToLikes} style={styles.backToLikes}>
-                <Text style={styles.backToLikesText}>Back to likes</Text>
-            </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+        <MatchModal
+            isVisible={isMatchModalVisible}
+            onClose={() => setIsMatchModalVisible(false)}
+            goToMatches={goToMatches}
+            backToLikes={backToLikes}
+        />
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           {/* Back Button */}
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -285,34 +273,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2, 
     shadowRadius: 2, 
     elevation: 5 
-  },
-  matchesButton: {
-    backgroundColor: 'black',
-    padding: 10,
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    marginTop: 30,
-    alignItems: 'center', // Center horizontally
-    justifyContent: 'center', // Center vertically
-  },
-  matchesText: {
-    color: '#fff',
-    fontSize: 18,
-    margin: 5,
-  },
-  backToLikes: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    marginTop: 10,
-    alignItems: 'center', // Center horizontally
-    justifyContent: 'center', // Center vertically
-  },
-  backToLikesText: {
-    color: 'black',
-    fontSize: 18,
-    fontFamily: 'Optima',
   },
 });
 

@@ -76,6 +76,10 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
             </TouchableOpacity>
           </View>
         )}
+        <TouchableOpacity style={styles.reportButton} onPress={{}}>
+            <Ionicons name='flag-outline' size={24} color="black" style={styles.reportIcon}/>
+            <Text style={styles.reportText}>Report User</Text>
+        </TouchableOpacity>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
@@ -146,15 +150,27 @@ const styles = StyleSheet.create({
   likeButton: { backgroundColor: '#fff', padding: 23, marginBottom: 25, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
   declineButton: { backgroundColor: '#fff', padding: 15, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
   livingWith: { fontSize: 18, paddingBottom: 10},
-
-  // Modal styles
-  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '80%', padding: 20, backgroundColor: '#fff', borderRadius: 10, alignItems: 'center' },
-  modalText: { fontSize: 18, marginBottom: 20, textAlign: 'center' },
-  shareButton: { backgroundColor: '#6a6a6a', padding: 15, borderRadius: 5, alignItems: 'center', marginVertical: 10 },
-  shareButtonText: { color: '#fff', fontSize: 16 },
-  closeModalButton: { marginTop: 10 },
-  closeModalText: { color: '#007bff', fontSize: 16 },
+  reportButton: {
+    backgroundColor: '#fff',
+    padding: 5,
+    marginTop: 100,
+    marginBottom: 25,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    width: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    alignSelf: 'center', // Center the button horizontally
+  },
+  reportIcon: {
+    marginRight: 10,
+  },
+  reportText: {
+    fontFamily: 'Optima',
+    fontSize: 16,
+  },
   aboutMe: {
     fontSize: 20,
     fontFamily: 'Optima',
@@ -166,6 +182,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginVertical: 10,
   },
+
+  // Modal styles
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: '80%', padding: 20, backgroundColor: '#fff', borderRadius: 10, alignItems: 'center' },
+  modalText: { fontSize: 18, marginBottom: 20, textAlign: 'center' },
+  shareButton: { backgroundColor: '#6a6a6a', padding: 15, borderRadius: 5, alignItems: 'center', marginVertical: 10 },
+  shareButtonText: { color: '#fff', fontSize: 16 },
+  closeModalButton: { marginTop: 10 },
+  closeModalText: { color: '#007bff', fontSize: 16 },
+  
 });
 
 export default ProfileCard;
