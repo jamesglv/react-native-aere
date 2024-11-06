@@ -53,6 +53,9 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
             {profile.livingWith.join(', ')}
           </Text>
         )}
+        <View style={styles.divider} />
+        <Text style={styles.aboutMe}>About Me</Text>
+
         <Text style={styles.bio}>{profile.bio}</Text>
         {/* Private Album */}
         {privatePhotos && privatePhotos.length > 0 && (
@@ -152,6 +155,17 @@ const styles = StyleSheet.create({
   shareButtonText: { color: '#fff', fontSize: 16 },
   closeModalButton: { marginTop: 10 },
   closeModalText: { color: '#007bff', fontSize: 16 },
+  aboutMe: {
+    fontSize: 20,
+    fontFamily: 'Optima',
+    color: '#333',
+    marginVertical: 10,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#ccc',
+    marginVertical: 10,
+  },
 });
 
 export default ProfileCard;

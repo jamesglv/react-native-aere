@@ -69,7 +69,7 @@ const Profile = () => {
       {/* Profile Header with Photo, Gradient, and Name */}
       <View style={styles.header}>
         <Image 
-          source={{ uri: photos[0] || 'https://placekitten.com/800/400' }}  // Display user's first photo or a placeholder
+          source={{ uri: photos[0] || '' }}  // Display user's first photo or a placeholder
           style={styles.profileImage}
         />
         <LinearGradient
