@@ -5,11 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faHeart } from '@fortawesome/free-solid-svg-icons/faHeart';
 import { LinearGradient } from 'expo-linear-gradient';
+import ReportModal from './ReportModal';
 
 const { width, height } = Dimensions.get('window');
 
-const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum }) => {
+const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum, setShowModal }) => {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
   // Placeholder images for the private album
   const placeholderImages = [
@@ -58,7 +60,7 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
 
         <Text style={styles.bio}>{profile.bio}</Text>
         {/* Private Album */}
-        {privatePhotos && privatePhotos.length > 0 && (
+        {privatePhotos && privatePhotos.length > 0 ? (
           <View style={styles.privateAlbumContainer}>
             <Text style={styles.albumTitle}>Private Album</Text>
             <View style={styles.blurredImagesContainer}>
@@ -75,8 +77,12 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
               <Text style={styles.requestAccessText}>Like and Request Access</Text>
             </TouchableOpacity>
           </View>
+        ) : (
+          <TouchableOpacity style={styles.sharePrivateAlbumButton} onPress={() => setIsShareModalVisible(true)}>
+            <Text style={styles.sharePrivateAlbumText}>Share your private album</Text>
+          </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.reportButton} onPress={{}}>
+        <TouchableOpacity style={styles.reportButton} onPress={() => setIsReportModalVisible(true)}>
             <Ionicons name='flag-outline' size={24} color="black" style={styles.reportIcon}/>
             <Text style={styles.reportText}>Report User</Text>
         </TouchableOpacity>
@@ -128,6 +134,21 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
           </View>
         </LinearGradient>
       </Modal>
+
+      <ReportModal
+        isVisible={isReportModalVisible}
+        onClose={() => setIsReportModalVisible(false)}
+        report={() => {
+          setIsReportModalVisible(false);
+          // Add your navigation logic here
+        }}
+        close={() => {
+          setIsReportModalVisible(false);
+          // Add your navigation logic here
+        }}
+        reportedUserId={profile.id}
+        matchId={""}
+      />
     </View>
   );
 };
@@ -153,7 +174,7 @@ const styles = StyleSheet.create({
   reportButton: {
     backgroundColor: '#fff',
     padding: 5,
-    marginTop: 100,
+    marginTop: 50,
     marginBottom: 25,
     borderRadius: 10,
     borderWidth: 1,
@@ -181,6 +202,20 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#ccc',
     marginVertical: 10,
+  },
+  sharePrivateAlbumButton: {
+    backgroundColor: 'white',
+    paddingVertical: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    alignItems: 'center',
+    marginTop: 60,
+  },
+  sharePrivateAlbumText: {
+    color: 'black',
+    fontFamily: 'Optima',
+    fontSize: 16,
   },
 
   // Modal styles

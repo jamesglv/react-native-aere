@@ -383,3 +383,39 @@ export const deleteUserAccount = async () => {
     throw error;
   }
 };
+
+export const reportUser = async ({ reportedUserId, matchId }) => {
+  const reportUserFunc = httpsCallable(functions, 'reportUser');
+  try {
+    const response = await reportUserFunc({ reportedUserId, matchId });
+    if (response.data.success) {
+      console.log("User reported successfully");
+    } else {
+      throw new Error("Failed to report user");
+    }
+  } catch (error) {
+    console.error("Error reporting user:", error);
+    throw error;
+  }
+};
+
+export const sendTestNotification = async (expoPushToken) => {
+  if (!expoPushToken) {
+    Alert.alert('Error', 'Expo push token is not available.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://us-central1-aere-react-native.cloudfunctions.net/sendTestNotification?token=${expoPushToken}`);
+    const data = await response.json();
+    if (response.ok) {
+      console.log(data.message);
+      Alert.alert('Success', 'Test notification sent successfully.');
+    } else {
+      Alert.alert('Error', `Failed to send notification: ${data.message}`);
+    }
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    Alert.alert('Error', 'Failed to send notification.');
+  }
+};

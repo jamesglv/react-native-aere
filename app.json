@@ -34,6 +34,15 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "1bb185ee-a45e-4287-843b-2f92cb20c7d9"
+      }
+    },
+    "owner": "jamesglv"
   }
 }

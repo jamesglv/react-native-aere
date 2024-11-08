@@ -59,11 +59,14 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.7.0",
     "rn-range-slider": "^2.2.2",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "expo-notifications": "~0.28.19",
+    "expo-device": "~6.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "tailwindcss": "^3.3.2"
+    "tailwindcss": "^3.3.2",
+    "expo-cli": "^6.0.0"
   },
   "private": true
 }

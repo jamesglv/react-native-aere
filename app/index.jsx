@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ScrollView, Text, View, Image, StyleSheet } from 'react-native';
 import { Link, Redirect, router } from 'expo-router';
@@ -7,9 +7,17 @@ import { Video } from 'expo-av';
 import { images } from '../constants';
 import CustomButton from '../components/CustomButton';
 import { useGlobalContext } from '../context/GlobalProvider';
+import usePushNotifications from '../usePushNotifications'; 
 
 export default function App() {
   const { loading, isLogged } = useGlobalContext();
+  const { expoPushToken, notification } = usePushNotifications();
+
+  useEffect(() => {
+    if (expoPushToken) {
+      console.log('Expo Push Token:', expoPushToken); // Log the token
+    }
+  }, [expoPushToken]);
 
   if(!loading && isLogged) return <Redirect href='/home'/>;
   console.log('isLogged:', isLogged, 'isLoading:', loading);

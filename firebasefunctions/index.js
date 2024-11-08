@@ -826,3 +826,86 @@ exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'Failed to delete user account.');
   }
 });
+
+exports.reportUser = functions.https.onCall(async (data, context) => {
+  const { reportedUserId, matchId } = data;
+
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to report a user.'
+    );
+  }
+
+  const reportingUserId = context.auth.uid;
+  const reportId = uuidv4(); // Generate a unique ID for the report
+
+  try {
+    // Add a document in the 'reported' collection
+    await db.collection('reported').doc(reportedUserId).set({
+      reports: {
+        [reportId]: {
+          reportedDate: admin.firestore.Timestamp.now(),
+          reportingUser: reportingUserId,
+          matchId: matchId,
+        }
+      }
+    }, { merge: true });
+
+    // Add the reported user ID to the current user's 'hiddenProfiles' field
+    const currentUserRef = db.collection('users').doc(reportingUserId);
+    await currentUserRef.update({
+      hiddenProfiles: admin.firestore.FieldValue.arrayUnion(reportedUserId),
+    });
+
+    // Remove the matchId from the user's 'matches' array if matchId is not an empty string
+    if (matchId) {
+      await currentUserRef.update({
+        matches: admin.firestore.FieldValue.arrayRemove(matchId),
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error reporting user:", error);
+    throw new functions.https.HttpsError('internal', 'Failed to report user');
+  }
+});
+
+exports.sendTestNotification = functions.https.onRequest(async (req, res) => {
+  const expoPushToken = req.query.token; // Get the token from the query parameters
+
+  if (!expoPushToken) {
+    return res.status(400).send('Missing expoPushToken');
+  }
+
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: 'Test Notification',
+    body: 'This is a test notification from Firebase',
+    data: { someData: 'goes here' },
+  };
+
+  try {
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Accept-encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      return res.status(200).send(data);
+    } else {
+      return res.status(response.status).send(data);
+    }
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return res.status(500).send('Error sending notification');
+  }
+});

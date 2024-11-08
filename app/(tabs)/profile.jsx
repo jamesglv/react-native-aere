@@ -138,10 +138,10 @@ const Profile = () => {
         title="Notifications"
         onPress={() => router.push()}
       />
-      <ProfileButton
+      {/* <ProfileButton
         title="Blocked List"
         onPress={() => router.push()}
-      />
+      /> */}
       <ProfileButton
         title="Change Password"
         onPress={() => router.push()}

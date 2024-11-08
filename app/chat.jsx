@@ -6,9 +6,10 @@ import { doc, updateDoc, onSnapshot, arrayUnion } from 'firebase/firestore';  //
 import { Timestamp } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons'; // Icon for the back button
 import { useNavigation } from '@react-navigation/native';  // Use navigation hook
-import { sendMessage as sendMessageAction } from '../firebaseActions'; // Import as sendMessageAction
+import { sendMessage as sendMessageAction, reportUser } from '../firebaseActions'; // Import as sendMessageAction
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faArrowUp } from '@fortawesome/free-solid-svg-icons/faArrowUp';
+import ReportModal from '../components/ReportModal';
 
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
@@ -22,6 +23,7 @@ const Chat = () => {
   const [dragged, setDragged] = useState({});
   const navigation = useNavigation();
   const [inputHeight, setInputHeight] = useState(50); // Initialize inputHeight state
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
 
   // Ref for the FlatList to control scrolling
@@ -69,6 +71,11 @@ const Chat = () => {
     }
   };
 
+  const handleReport = () => {
+    setIsReportModalVisible(false);
+    navigation.goBack();
+  };
+
   const renderMessage = ({ item, index }) => {
     const isCurrentUserSender = item.senderID === currentUserId;
 
@@ -98,19 +105,25 @@ const Chat = () => {
       <StatusBar hidden={false} />
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={router.back} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: '/userProfiles', params: { userId: id } })}
-          style={styles.userInfo}
-        >
-          <Image
-            source={photo ? { uri: photo } : require('../assets/default-profile.png')}
-            style={styles.profileImage}
-            resizeMode="cover"
-          />
-          <Text style={styles.userName} className='font-oregular'>{name || 'User'}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={router.back} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color="black" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/userProfiles', params: { userId: id } })}
+            style={styles.userInfo}
+          >
+            <Image
+              source={photo ? { uri: photo } : require('../assets/default-profile.png')}
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+            <Text style={styles.userName} className='font-oregular'>{name || 'User'}</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <TouchableOpacity onPress={() => setIsReportModalVisible(true)} style={styles.moreButton}>
+          <Ionicons name="ellipsis-horizontal" size={28} color="black" />
         </TouchableOpacity>
       </View>
 
@@ -143,6 +156,16 @@ const Chat = () => {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Report Modal */}
+      <ReportModal
+        isVisible={isReportModalVisible}
+        onClose={() => setIsReportModalVisible(false)}
+        report={handleReport}
+        close={() => setIsReportModalVisible(false)}
+        reportedUserId={id}
+        matchId={matchId}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -155,6 +178,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
     paddingTop: 60,
@@ -162,9 +186,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
+  headerLeft: {
+    flexDirection: 'row',
+  },
+  moreButton: {
+    paddingRight: 10,
+  },
   backButton: {
     marginRight: 10,
     padding: 5,
+    marginTop: 5,
   },
   profileImage: {
     width: 50,

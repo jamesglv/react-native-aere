@@ -8,10 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import haversine from 'haversine-distance';
 import ProfileCard from '../../components/ProfileCard';
 import FilterModal from '../../components/FilterModal';
-import { fetchUserData, fetchProfiles, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum } from '../../firebaseActions';
+import { fetchUserData, fetchProfiles, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum, sendTestNotification } from '../../firebaseActions';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
 import Loading from'../../components/Loading';
+import usePushNotifications from '../../usePushNotifications';
+
 const { width, height } = Dimensions.get('window');
 
 const Home = () => {
@@ -30,7 +32,7 @@ const Home = () => {
   const [currentUserData, setCurrentUserData] = useState({ likedUsers: [], declinedUsers: [] });
   const [showModal, setShowModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-
+  const { expoPushToken } = usePushNotifications();
 
   useEffect(() => {
     const user = FIREBASE_AUTH.currentUser;
@@ -143,6 +145,10 @@ const Home = () => {
     }
   };
 
+  const handleSendTestNotification = async () => {
+    await sendTestNotification(expoPushToken);
+  };
+
   if (isLoading) {
     return <Loading />;
   }
@@ -193,6 +199,7 @@ const Home = () => {
                 handleDecline={(targetUserId) => handleDecline(currentUserId, targetUserId, setProfiles, profiles)}
                 handleRequestAccess={(targetUserId) => handleRequestAccess(currentUserId, targetUserId, setSelectedProfile, setShowModal)}
                 handleSharePrivateAlbum={(targetUserId) => handleSharePrivateAlbum(currentUserId, targetUserId, setShowModal)}
+                setShowModal={setShowModal} // Pass setShowModal as a prop
               />
             )}
             showsHorizontalScrollIndicator={false}
@@ -207,6 +214,9 @@ const Home = () => {
 
         <TouchableOpacity style={styles.settingsButton} onPress={toggleFilterModal}>
           <FontAwesomeIcon icon={faSliders} size={20} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.testNotificationButton} onPress={handleSendTestNotification}>
+          <Text style={styles.testNotificationButtonText}>Send Test Notification</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </>
@@ -233,6 +243,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  testNotificationButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  testNotificationButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
