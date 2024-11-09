@@ -36,6 +36,7 @@ const SignIn = () => {
   const submit = async () => {
     if (!form.email || !form.password) {
       Alert.alert("Error", "Please make sure all fields are complete.");
+      logError(new Error('Please make sure all fields are complete.'));
       return;
     }
 

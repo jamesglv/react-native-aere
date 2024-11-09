@@ -8,6 +8,9 @@ import { images } from '../constants';
 import CustomButton from '../components/CustomButton';
 import { useGlobalContext } from '../context/GlobalProvider';
 import usePushNotifications from '../usePushNotifications'; 
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync(); // Prevent the splash screen from auto-hiding
 
 export default function App() {
   const { loading, isLogged } = useGlobalContext();
@@ -23,6 +26,21 @@ export default function App() {
       }
     }, [expoPushToken]);
 
+    useEffect(() => {
+      async function prepare() {
+        try {
+          // Perform any necessary setup or data fetching here
+        } catch (e) {
+          console.warn(e);
+        } finally {
+          // Tell the splash screen to hide once your app is ready
+          await SplashScreen.hideAsync();
+        }
+      }
+  
+      prepare();
+    }, []);
+    
   if(!loading && isLogged) return <Redirect href='/home'/>;
   console.log('isLogged:', isLogged, 'isLoading:', loading);
 

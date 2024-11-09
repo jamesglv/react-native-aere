@@ -3,11 +3,10 @@ import { initializeApp } from 'firebase/app';
 // Optionally import the services that you want to use
  import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
  import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// import {...} from "firebase/database";
-import { getFirestore } from 'firebase/firestore';
-// import {...} from "firebase/functions";
+  import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics'; // Import Analytics and isSupported
+
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -37,3 +36,16 @@ try {
 export const FIREBASE_AUTH = firebaseAuth;
 export const FIREBASE_DB = getFirestore(FIREBASE_APP);
 export const FIREBASE_STORAGE = getStorage(FIREBASE_APP);
+
+let analytics;
+isSupported().then((supported) => {
+  if (supported) {
+    analytics = getAnalytics(FIREBASE_APP); // Initialize Firebase Analytics
+  } else {
+    console.warn('Firebase Analytics is not supported in this environment.');
+  }
+}).catch((error) => {
+  console.error('Error checking analytics support:', error);
+});
+
+export { analytics };
