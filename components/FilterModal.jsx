@@ -107,23 +107,26 @@ const FilterModal = ({
                 <Text style={styles.distanceLabel} className='font-oregular'>Max Distance: {Math.round(maxDistance)} km</Text>
               </View>
 
-              <Text style={styles.modalTitle} className='font-oregular'>Gender</Text>
-              <View style={styles.checkboxContainer}>
-                {['Male', 'Female', 'Non-Binary'].map((gender) => (
-                  <TouchableOpacity
-                    key={gender}
-                    style={styles.checkbox}
-                    onPress={() => toggleGender(gender)}
-                  >
-                    <Ionicons
-                      name={selectedGenders.includes(gender) ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={24}
-                      color={selectedGenders.includes(gender) ? 'black' : '#ddd'}
-                    />
-                    <Text style={styles.checkboxLabel} className='font-oregular'>{gender}</Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={styles.genderContainer}>
+                <Text style={styles.modalTitle} className='font-oregular'>Gender</Text>
+                <View style={styles.checkboxContainer}>
+                  {['Male', 'Female', 'Non-Binary'].map((gender) => (
+                    <TouchableOpacity
+                      key={gender}
+                      style={styles.checkbox}
+                      onPress={() => toggleGender(gender)}
+                    >
+                      <Ionicons
+                        name={selectedGenders.includes(gender) ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={24}
+                        color={selectedGenders.includes(gender) ? 'black' : '#ddd'}
+                      />
+                      <Text style={styles.checkboxLabel} className='font-oregular'>{gender}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
+              
             </View>
           </TouchableWithoutFeedback>
         </LinearGradient>
@@ -142,7 +145,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
-    height: '70%',
+    height: '75%',
     backgroundColor: '#fff',
     padding: 20,
     borderTopLeftRadius: 30,
@@ -166,6 +169,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 20,
     width: '100%',
+  },
+  genderContainer: { 
+    width: '100%', 
+    marginBottom: 50,
+    alignItems: 'center',
   },
   checkbox: {
     flexDirection: 'row',

@@ -124,9 +124,7 @@ const Profile = () => {
         />
       </View>
       <View style={styles.pauseTextContainer}>
-        <Text style={styles.pauseText} className='font-oregular'>Pausing hides your profile from appearing in the</Text>
-        <Text style={styles.pauseText} className='font-oregular'>explore feed. You can still view your likes and</Text>
-        <Text style={styles.pauseText} className='font-oregular'>matches.</Text>
+        <Text style={styles.pauseText} className='font-oregular'>Pausing hides your profile from appearing in the explore feed. You can still view your likes and matches.</Text>
 
       </View>
 

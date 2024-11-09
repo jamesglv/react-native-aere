@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, Image, Alert, StyleSheet, StatusBar } from 'react-native';
-import React, { useState } from 'react';
+import { View, Text, ScrollView, Image, Alert, StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Dimensions, Keyboard } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
 import FormField from '../../components/FormField';
 import { Link, useRouter } from 'expo-router';
 import { Video } from 'expo-av';
@@ -8,6 +8,8 @@ import CustomButton from '../../components/CustomButton';
 // Firebase imports
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../../firebaseConfig';  
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const SignIn = () => {
   const router = useRouter();
@@ -18,6 +20,17 @@ const SignIn = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const scrollViewRef = useRef(null);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+  
+    return () => {
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   const submit = async () => {
     if (!form.email || !form.password) {
@@ -41,27 +54,33 @@ const SignIn = () => {
   };
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
     <View className="bg-white h-full">
       <StatusBar translucent backgroundColor="transparent" />
-      <Video
-          source={require('../../assets/images/splash.mp4')}
-          style={styles.video}
-          resizeMode="cover"
-          isLooping
-          shouldPlay
-          isMuted
-        />
-        <View style={styles.overlay} />
-
-        <View style={styles.logoContainer}>
-          <Image source={require('../../assets/images/logowhite.png')} style={styles.logo} />
+      <ScrollView ref={scrollViewRef}>
+        <View style={styles.topContainer}>
+          <Video
+            source={require('../../assets/images/splash.mp4')}
+            style={styles.video}
+            resizeMode="cover"
+            isLooping
+            shouldPlay
+            isMuted
+          />
+          <View style={styles.overlay} />
+          <View style={styles.logoContainer}>
+            <Image source={require('../../assets/images/logowhite.png')} style={styles.logo} />
+          </View>
         </View>
-      <ScrollView>
+      
         
-        <View style={styles.contentContainer} className='w-full justify-center h-full px-4 my-6'>
+        <View style={styles.contentContainer} className='w-full justify-center px-4'>
           
           
-          <Text style={styles.welcome} className='text-2xl text-black text-semibold mt-10 font-oregular'>
+          <Text style={styles.welcome} className='text-2xl text-black text-semibold font-oregular'>
             Nice to see you again.
           </Text>
 
@@ -111,50 +130,46 @@ const SignIn = () => {
         </View>
       </ScrollView>
     </View>
+    </KeyboardAvoidingView>
   );
 };
 
 // Styles
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#f8f8f8',
-  },
-  contentContainer: {
-    flexGrow: 1,
-    paddingTop: '95%',
+  topContainer: {
+    position: 'relative',
+    height: screenHeight * 0.5, // Adjust the height as needed
   },
   video: {
-    position: 'absolute',
-    height: '50%',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
     ...StyleSheet.absoluteFillObject,
   },
-  welcome: {
-    marginBottom: 20,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    height: '100%',
   },
   logoContainer: {
+    ...StyleSheet.absoluteFillObject,
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    height: '50%',
   },
   logo: {
     width: 200,
     height: 200,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    height: '50%',
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    backgroundColor: 'white',
+    paddingTop: 20,
+    marginBottom: 20,
+  },
+  welcome: {
+    marginBottom: 20,
   },
 });
 

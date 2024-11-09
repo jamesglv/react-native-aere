@@ -3,7 +3,7 @@ import { Text, View, TextInput, TouchableOpacity, Image, StyleSheet } from 'reac
 
 import { icons } from '../constants'
 
-const FormField = ({ title, value, placeholder, handleChangeText, showPassword, setShowPassword, ...props }) => {
+const FormField = ({ title, value, placeholder, handleChangeText, showPassword, setShowPassword, onFocus, onBlur, ...props }) => {
     return (
         <>
             
@@ -15,6 +15,10 @@ const FormField = ({ title, value, placeholder, handleChangeText, showPassword, 
                     placeholderTextColor='lightgray'
                     onChangeText={handleChangeText}
                     secureTextEntry={title === 'Password' && !showPassword}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    autoCorrect={false}          // Disable auto-correction
+                    autoCapitalize='none' 
                     {...props}
                 />
 
