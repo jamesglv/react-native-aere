@@ -6,7 +6,7 @@ import { Video } from 'expo-av';
 import CustomButton from '../../components/CustomButton';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
-import { createUserDocument } from '../../firebaseActions';  // Import from firebaseActions
+import { createUserDocument } from '../../firebaseActions';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -61,7 +61,8 @@ const SignUp = () => {
       } else {
         // Handle other errors
         console.error(error);
-      }    } finally {
+      }    
+    } finally {
       setIsSubmitting(false);
     }
   };

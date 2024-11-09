@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import FormField from '../../components/FormField';
 import { Link, useRouter } from 'expo-router';
 import { Video } from 'expo-av';
+import { logError } from '../../errorLogger';
 
 import CustomButton from '../../components/CustomButton';
 // Firebase imports
