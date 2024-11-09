@@ -105,7 +105,7 @@ exports.uploadUserPhoto = functions.https.onCall(async (data, context) => {
 // FETCH USER DATA SELECTIVELY
 
 exports.fetchUserData = functions.https.onCall(async (data, context) => {
-    const { fields } = data;
+    const { fields, limit } = data;
   
     // Ensure the user is authenticated
     if (!context.auth) {
@@ -134,6 +134,15 @@ exports.fetchUserData = functions.https.onCall(async (data, context) => {
         }
         return result;
       }, {});
+
+      // Apply limit to the selected data if applicable
+      if (limit && limit > 0) {
+        Object.keys(selectedData).forEach(key => {
+          if (Array.isArray(selectedData[key])) {
+            selectedData[key] = selectedData[key].slice(0, limit);
+          }
+        });
+      }
   
       return { userData: selectedData };
     } catch (error) {

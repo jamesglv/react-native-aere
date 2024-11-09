@@ -59,12 +59,12 @@ export const uploadUserPhoto = async (base64Image, userId, isPrivate) => {
 
 // FETCH USER DATA
 
-export const fetchUserData = async (fields) => {
+export const fetchUserData = async (fields, limit = 100) => {
     const currentUserId = FIREBASE_AUTH.currentUser?.uid;
     if (!currentUserId) throw new Error("User not logged in");
   
     const fetchUserDataFunction = httpsCallable(functions, 'fetchUserData');
-    const response = await fetchUserDataFunction({ fields });
+    const response = await fetchUserDataFunction({ fields, limit });
   
     return response.data.userData;  // Access 'userData' from response
   };

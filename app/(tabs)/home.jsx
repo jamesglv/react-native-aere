@@ -96,13 +96,14 @@ const Home = () => {
       }
 
       const isGenderSelected = selectedGenders.length === 0 || selectedGenders.includes(profile.gender);
-      const isNotHidden = !currentUserData.hiddenProfiles?.includes(profile.id);
-      const isInterested = currentUserData.interested?.includes(profile.gender);
+      const isNotHidden = currentUserData.hiddenProfiles ? !currentUserData.hiddenProfiles.includes(profile.id) : true;
+      const isInterested = currentUserData.interested ? currentUserData.interested.includes(profile.gender) : false;
 
       return isNotPaused && isWithinAgeRange && isWithinDistance && isGenderSelected && isNotHidden;
     });
 
     setFilteredProfiles(filtered);
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -224,7 +225,7 @@ const Home = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1c1c1e' },
+  container: { flex: 1, backgroundColor: 'white' },
   scrollView: { nestedScrollEnabled: true },
   noProfilesContainer: { 
     width: '100%', 

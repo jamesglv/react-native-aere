@@ -91,8 +91,8 @@ const Profile = () => {
       {/* Profile Header with Photo, Gradient, and Name */}
       <View style={styles.header}>
         <Image 
-          source={{ uri: photos[0] || '' }}  // Display user's first photo or a placeholder
-          style={styles.profileImage}
+        source={photos[0] ? { uri: photos[0] } : require('../../assets/images/placeholderAERE.png')}
+        style={styles.profileImage}
         />
         <LinearGradient
           colors={['transparent', 'rgba(0, 0, 0, 0.8)']} // Gradient from transparent to black

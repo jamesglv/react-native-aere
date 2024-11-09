@@ -14,10 +14,14 @@ export default function App() {
   const { expoPushToken, notification } = usePushNotifications();
 
   useEffect(() => {
-    if (expoPushToken) {
-      console.log('Expo Push Token:', expoPushToken); // Log the token
-    }
-  }, [expoPushToken]);
+    try {
+      if (expoPushToken) {
+        console.log('Expo Push Token:', expoPushToken); // Log the token
+      } 
+    } catch (error) {
+        console.error('Error getting Expo Push Token:', error);
+      }
+    }, [expoPushToken]);
 
   if(!loading && isLogged) return <Redirect href='/home'/>;
   console.log('isLogged:', isLogged, 'isLoading:', loading);
