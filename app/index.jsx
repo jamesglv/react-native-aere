@@ -67,7 +67,6 @@ export default function App() {
           <View className='relative mt-5'>
             <Text style={styles.title} className='font-oregular'>
               Dating. Without the awkward conversation.
-            
             </Text>
 
           </View>

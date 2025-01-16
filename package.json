@@ -38,6 +38,7 @@
     "expo-modules-autolinking": "~1.11.0",
     "expo-notifications": "~0.28.19",
     "expo-router": "~3.5.24",
+    "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",
     "firebase": "^11.0.1",
     "firebase-admin": "^12.7.0",
@@ -68,8 +69,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.7.0",
     "rn-range-slider": "^2.2.2",
-    "styled-components": "^6.1.13",
-    "expo-splash-screen": "~0.27.7"
+    "styled-components": "^6.1.13"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

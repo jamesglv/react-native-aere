@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDo8wApI0sdPhxuUajq_QAbfRCt9Lw4jd4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>159308643479</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.harwooddigital.AERE</string>
+	<key>PROJECT_ID</key>
+	<string>aere-react-native</string>
+	<key>STORAGE_BUCKET</key>
+	<string>aere-react-native.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:159308643479:ios:19b36a4d9ac73785a07dd2</string>
+</dict>
+</plist>

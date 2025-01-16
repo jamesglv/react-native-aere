@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, Image, Alert, StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Dimensions, Keyboard } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
+import * as Analytics from "expo-firebase-analytics";
 import FormField from '../../components/FormField';
 import { Link, useRouter } from 'expo-router';
 import { Video } from 'expo-av';
@@ -22,6 +23,13 @@ const SignIn = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollViewRef = useRef(null);
+
+  useEffect(() => {
+    Analytics.logEvent("screen_view", {
+      screen_name: "SignIn",
+      screen_class: "SignInPage",
+    });
+  }, []);  
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {

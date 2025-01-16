@@ -15,10 +15,12 @@
     "ios": {
       "supportsTablet": true,
       "package": "com.harwooddigital.AERE",
+      "buildNumber": "1.0.0",
       "config": {
         "googleMapsApiKey": "AIzaSyDG7t8dtS1t0xBDpCyzjI11dusFpmVOvJI"
       },
-      "bundleIdentifier": "com.harwooddigital.AERE"
+      "bundleIdentifier": "com.harwooddigital.AERE",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,16 +36,24 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-firebase-core",
+        {
+          "ios": {
+            "googleServicesFile": "./GoogleService-Info.plist"
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "1bb185ee-a45e-4287-843b-2f92cb20c7d9"
+        "projectId": "57e3815a-b48a-4e47-aad1-b2e9f2c7b386"
       }
     },
-    "owner": "jamesglv"
+    "owner": "jamesogilvie95"
   }
 }

@@ -1,15 +1,27 @@
 {
-    "build": {
-      "development": {
-        "developmentClient": true,
-        "distribution": "internal"
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "ios": {
+        "distribution": "store",
+        "autoIncrement": true,
+        "credentialsSource": "remote"
       },
-      "preview": {
-        "ios": {
-          "simulator": true
-        }
-      },
-      "production": {}
+      "android": {
+        "distribution": "store",
+        "autoIncrement": true
+      }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
-  
+}
