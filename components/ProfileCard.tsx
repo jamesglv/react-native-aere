@@ -9,7 +9,16 @@ import ReportModal from './ReportModal';
 
 const { width, height } = Dimensions.get('window');
 
-const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum, setShowModal }) => {
+// Another example of how to type props
+interface ProfileCardProps {
+  profile: any; // Need a user profile object
+  handleLike: (userId: string) => void;
+  handleDecline: (userId: string) => void;
+  handleRequestAccess: (userId: string) => void;
+  handleSharePrivateAlbum: (userId: string) => void;
+  setShowModal: (showModal: boolean) => void;
+}
+const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum, setShowModal }:ProfileCardProps) => {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
@@ -48,6 +57,7 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
       </View>
 
       {/* Profile Text */}
+      {/*Using tailwind in the repo but using react native style sheets pretty much everywhere. Pick one and use everywhere. Id use tailwind even though lots is already done chatgpt will swap it all over. Ill need to sus out the type error on className first though*/}
       <View style={styles.textContainer}>
         <Text className='font-obold' style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
         {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (

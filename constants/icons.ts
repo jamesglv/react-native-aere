@@ -27,3 +27,8 @@ export default {
   eyeHide,
   eye,
 };
+
+
+// TODO: Shouldn't need this, todo -> make an alias and import from there.
+//  Most of those should be binned and pulled from an icon lib like lucide or react-icons or whatever
+// Static images for icons cant be styled, not scalable, not animated, etc. and large file size
