@@ -1,14 +1,13 @@
-import React, { useEffect } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { ScrollView, Text, View, Image, StyleSheet } from 'react-native';
-import { Link, Redirect, router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Video } from 'expo-av';
-import { images } from '../constants';
+import React, {useEffect} from 'react';
+import {StatusBar} from 'expo-status-bar';
+import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Redirect, router} from 'expo-router';
+import {Video} from 'expo-av';
 import CustomButton from '../components/CustomButton';
-import { useGlobalContext } from '../context/GlobalProvider';
-import usePushNotifications from '../usePushNotifications'; 
+import {useGlobalContext} from '../context/GlobalProvider';
+import usePushNotifications from '../hooks/usePushNotifications';
 import * as SplashScreen from 'expo-splash-screen';
+import "@/global.css";
 
 SplashScreen.preventAutoHideAsync(); // Prevent the splash screen from auto-hiding
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start --dev-client",
+    "start": "npx expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web"
@@ -69,10 +69,12 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.7.0",
     "rn-range-slider": "^2.2.2",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "typescript": "~5.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "babel-plugin-module-resolver": "^5.0.2",
     "tailwindcss": "^3.3.2"
   },
   "private": true

@@ -12,7 +12,7 @@ import { fetchUserData, fetchProfiles, handleLike, handleDecline, handleRequestA
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
 import Loading from'../../components/Loading';
-import usePushNotifications from '../../usePushNotifications';
+import usePushNotifications from '../../hooks/usePushNotifications';
 
 const { width, height } = Dimensions.get('window');
 
