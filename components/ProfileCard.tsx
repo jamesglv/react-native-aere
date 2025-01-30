@@ -6,18 +6,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faHeart } from '@fortawesome/free-solid-svg-icons/faHeart';
 import { LinearGradient } from 'expo-linear-gradient';
 import ReportModal from './ReportModal';
+import { ProfileCardProps } from '../constants/types';
 
 const { width, height } = Dimensions.get('window');
 
-// Another example of how to type props
-interface ProfileCardProps {
-  profile: any; // Need a user profile object
-  handleLike: (userId: string) => void;
-  handleDecline: (userId: string) => void;
-  handleRequestAccess: (userId: string) => void;
-  handleSharePrivateAlbum: (userId: string) => void;
-  setShowModal: (showModal: boolean) => void;
-}
 const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, handleSharePrivateAlbum, setShowModal }:ProfileCardProps) => {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
@@ -59,9 +51,9 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
       {/* Profile Text */}
       {/*Using tailwind in the repo but using react native style sheets pretty much everywhere. Pick one and use everywhere. Id use tailwind even though lots is already done chatgpt will swap it all over. Ill need to sus out the type error on className first though*/}
       <View style={styles.textContainer}>
-        <Text className='font-obold' style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
+        <Text style={[styles.name, { letterSpacing: 1.5, fontFamily: 'obold' }]}>{profile.name}, {profile.age}</Text>
         {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (
-          <Text className='font-oregular' style={styles.livingWith}>
+          <Text style={[styles.livingWith, {fontFamily: 'oregular'}]}>
             {profile.livingWith.join(', ')}
           </Text>
         )}
@@ -120,7 +112,7 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
           style={styles.modalOverlay}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalText} className='font-oregular'>Would you like to share your private album with this user?</Text>
+            <Text style={[styles.modalText, {fontFamily: 'oregular'}]}>Would you like to share your private album with this user?</Text>
 
             {/* Share Private Album Button */}
             <TouchableOpacity

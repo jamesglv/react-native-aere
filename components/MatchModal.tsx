@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { MatchModalProps } from '../constants/types';
 
-const MatchModal = ({ isVisible, onClose, goToMatches, backToLikes }) => {
+const MatchModal: React.FC<MatchModalProps> = ({ isVisible, onClose, goToMatches, backToLikes }) => {
   return (
     <Modal
       visible={isVisible}
-      transparent={true}
+      transparent
       animationType="slide"
       onRequestClose={onClose}
     >
@@ -13,10 +14,12 @@ const MatchModal = ({ isVisible, onClose, goToMatches, backToLikes }) => {
         <View style={styles.modalContent}>
           <Image source={require('../assets/images/rose.jpg')} style={styles.image} />
           <Text style={styles.title}>It's a match!</Text>
+
           <TouchableOpacity style={styles.matchesButton} onPress={goToMatches}>
             <Text style={styles.matchesText}>View Matches</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={backToLikes} style={styles.backToLikes}>
+
+          <TouchableOpacity style={styles.backToLikes} onPress={backToLikes}>
             <Text style={styles.backToLikesText}>Back to likes</Text>
           </TouchableOpacity>
         </View>
@@ -37,6 +40,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
+    alignItems: 'center', // Ensures elements are centered
   },
   image: {
     width: 100,
@@ -47,29 +51,33 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     fontFamily: 'Optima',
+    marginBottom: 20,
   },
   matchesButton: {
     backgroundColor: 'black',
-    padding: 10,
-    borderRadius: 25,
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    marginTop: 30,
+    borderRadius: 25,
+    marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   matchesText: {
     color: '#fff',
     fontSize: 18,
-    margin: 5,
   },
   backToLikes: {
     backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 25,
+    paddingVertical: 10,
     paddingHorizontal: 20,
+    borderRadius: 25,
     marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'black',
   },
   backToLikesText: {
     color: 'black',

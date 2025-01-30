@@ -45,7 +45,7 @@ const Likes = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title} className='font-oregular'>Likes</Text>
+      <Text style={[styles.title, {fontFamily: 'oregular'}]}>Likes</Text>
       {receivedLikes.length === 0 ? (  // Check if there are no likes
         <View style={styles.noLikesContainer}>
           <Image source={require('../../assets/images/rose.jpg')} style={{ width: width * 0.6, height: width * 0.6, opacity: 0.5 }} />

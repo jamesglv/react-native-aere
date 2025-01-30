@@ -64,7 +64,7 @@ export default function App() {
             style={styles.logo}
           />
           <View className='relative mt-5'>
-            <Text style={styles.title} className='font-oregular'>
+            <Text style={[ styles.title, { fontFamily: 'oregular'}]}>
               Dating. Without the awkward conversation.
             </Text>
 

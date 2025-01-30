@@ -8,9 +8,9 @@ import { useNavigation } from '@react-navigation/native';
 import { fetchTargetUserData, handleRequestAccess as handleRequestAccessAction, handleMatch as handleMatchAction, declineUser as declineUserAction, handleSharePrivateAlbum } from '../firebaseActions'; // Import the fetchUserData and handleRequestAccess functions
 import MatchProfileCard from '../components/MatchProfileCard';
 
-import placeholder1 from '../assets/images/placeholder-profile-1.png';
-import placeholder2 from '../assets/images/placeholder-profile-2.png';
-import placeholder3 from '../assets/images/placeholder-profile-3.png';
+const placeholder1 = require('../assets/images/placeholder-profile-1.png');
+const placeholder2 = require('../assets/images/placeholder-profile-2.png');
+const placeholder3 = require('../assets/images/placeholder-profile-3.png');
 
 const { width, height } = Dimensions.get('window');
 
@@ -82,7 +82,7 @@ const userProfiles = () => {
     <>
       <SafeAreaView style={styles.container} edges={['left', 'right']}>
 
-        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <ScrollView>
           {/* Back Button */}
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
@@ -102,7 +102,7 @@ const userProfiles = () => {
             )}
             showsHorizontalScrollIndicator={false}
             pagingEnabled
-            contentContainerStyle={styles.profilesCarousel}
+            //contentContainerStyle={styles.profilesCarousel}
             bounces={false}
           />
         

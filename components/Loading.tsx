@@ -1,7 +1,7 @@
 // FILE: Loading.jsx
 import React, {} from 'react';
 import { View, ActivityIndicator, StyleSheet, Image } from 'react-native';
-import { MaterialIndicator } from 'react-native-indicators';  // Import ActivityIndicator
+import { MaterialIndicator } from 'react-native-indicators'; 
 
 const Loading = () => {
 

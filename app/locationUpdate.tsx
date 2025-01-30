@@ -6,14 +6,15 @@ import { FIREBASE_AUTH, FIREBASE_DB } from '../firebaseConfig';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchUserData, updateUserDocument } from '../firebaseActions'; // Import the fetchUserData function
+import { Location, Region } from '../constants/types'; 
 
 const LocationUpdate = () => {
   const navigation = useNavigation();
   const currentUser = FIREBASE_AUTH.currentUser;
   
   // State for user's location and map region
-  const [location, setLocation] = useState(null);
-  const [region, setRegion] = useState(null); // Set initial state as null
+  const [location, setLocation] = useState<Location | null>(null);
+  const [region, setRegion] = useState<Region | null>(null); // Set initial state as null
 
   // Fetch user location from Firestore on mount
   useEffect(() => {

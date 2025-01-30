@@ -11,6 +11,7 @@ import * as Location from 'expo-location';  // Expo location services
 import uuid from 'react-native-uuid';
 import { saveUserProfile, uploadUserPhoto, calculateUserAge } from '../../firebaseActions';
 import { Ionicons } from '@expo/vector-icons';
+import { Region } from '../../constants/types';
 
 const { width } = Dimensions.get('window');
 
@@ -32,15 +33,15 @@ const Onboarding = () => {
   const [currentPage, setCurrentPage] = useState(0);
 
   // Track form inputs
-  const [name, setName] = useState('');
-  const [day, setDay] = useState('1');  // Default to 1st day
-  const [month, setMonth] = useState('1');  // Default to January
-  const [year, setYear] = useState('2000');  // Default to the year 2000
-  const [gender, setGender] = useState('');
-  const [livingWith, setLivingWith] = useState([]);
-  const [bio, setBio] = useState('');
-  const [photos, setPhotos] = useState([]);  // Array to store selected photos (max 6)
-  const [isUploading, setIsUploading] = useState(false);  // Track upload state
+  const [name, setName] = useState<string>('');
+  const [day, setDay] = useState<string>('1');  // Default to 1st day
+  const [month, setMonth] = useState<string>('1');  // Default to January
+  const [year, setYear] = useState<string>('2000');  // Default to the year 2000
+  const [gender, setGender] = useState<string>('');
+  const [livingWith, setLivingWith] = useState<string[]>([]);
+  const [bio, setBio] = useState<string>('');
+  const [photos, setPhotos] = useState<string[]>([]);  // Array to store selected photos (max 6)
+  const [isUploading, setIsUploading] = useState<boolean>(false);  // Track upload state
   const [location, setLocation] = useState(null);  // User's selected location (latitude, longitude)
   const [region, setRegion] = useState({
     latitude: 37.78825,
@@ -86,13 +87,6 @@ const Onboarding = () => {
     }
     return age;
   };
-
-  //// Function to handle scroll and track the current page
-  // const handleScroll = (event) => {
-  //   const scrollPosition = event.nativeEvent.contentOffset.x;
-  //   const newPage = Math.floor(scrollPosition / width);
-  //   setCurrentPage(newPage);  // Update the current page state
-  // };
 
   const handleNext = async () => {
     // Check validation for each page
@@ -294,7 +288,7 @@ const Onboarding = () => {
           size={24}
           color={livingWith.includes(title) ? 'white' : '#ddd'}
         />
-        <Text style={styles.checkboxLabel} className='font-oregular'>{title}</Text>
+        <Text style={styles.checkboxLabel}>{title}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -371,7 +365,7 @@ const Onboarding = () => {
                   size={24}
                   color={gender.includes('Male') ? 'white' : '#ddd'}
                 />
-                <Text style={styles.checkboxLabel} className='font-oregular'>Male</Text>
+                <Text style={styles.checkboxLabel}>Male</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.checkboxContainer}>
@@ -385,7 +379,7 @@ const Onboarding = () => {
                   size={24}
                   color={gender.includes('Female') ? 'white' : '#ddd'}
                 />
-                <Text style={styles.checkboxLabel} className='font-oregular'>Female</Text>
+                <Text style={styles.checkboxLabel}>Female</Text>
               </TouchableOpacity>
           </View>
           <View style={styles.checkboxContainer}>
@@ -399,7 +393,7 @@ const Onboarding = () => {
                 size={24}
                 color={gender.includes('Non-Binary') ? 'white' : '#ddd'}
               />
-              <Text style={styles.checkboxLabel} className='font-oregular'>Non-Binary</Text>
+              <Text style={styles.checkboxLabel}>Non-Binary</Text>
             </TouchableOpacity>
           </View>
           </View>
@@ -420,7 +414,7 @@ const Onboarding = () => {
                 size={24}
                 color={interested.includes('Male') ? 'white' : '#ddd'}
               />
-              <Text style={styles.checkboxLabel} className='font-oregular'>Men</Text>
+              <Text style={styles.checkboxLabel}>Men</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.checkboxContainer}>
@@ -433,7 +427,7 @@ const Onboarding = () => {
                 size={24}
                 color={interested.includes('Female') ? 'white' : '#ddd'}
               />
-              <Text style={styles.checkboxLabel} className='font-oregular'>Women</Text>
+              <Text style={styles.checkboxLabel}>Women</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.checkboxContainer}>
@@ -446,7 +440,7 @@ const Onboarding = () => {
                 size={24}
                 color={interested.includes('Non-Binary') ? 'white' : '#ddd'}
               />
-              <Text style={styles.checkboxLabel} className='font-oregular'>Non-Binary</Text>
+              <Text style={styles.checkboxLabel}>Non-Binary</Text>
             </TouchableOpacity>
           </View>
           </View>
@@ -774,6 +768,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 18,
     color: '#fff',
+    fontFamily: 'oregular',
   },
   selectPhotosButton: {
     backgroundColor: 'white',

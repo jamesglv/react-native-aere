@@ -1,35 +1,49 @@
-// ProfileCard.jsx
 import React, { useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Dimensions,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MatchProfileCardProps } from '../constants/types';
 
 const { width, height } = Dimensions.get('window');
 
-const MatchProfileCard = ({ profile, handleRequestAccess, handleSharePrivateAlbum, hasAccess, hasRequested }) => {
+const MatchProfileCard: React.FC<MatchProfileCardProps> = ({
+  profile,
+  handleRequestAccess,
+  handleSharePrivateAlbum,
+  hasAccess,
+  hasRequested,
+}) => {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [isPhotoViewerVisible, setIsPhotoViewerVisible] = useState(false);
 
-  // Placeholder images for the private album
-  const placeholderImages = [
+  // Placeholder images for private album
+  const placeholderImages: (string | number)[] = [
     require('../assets/images/placeholder-profile-1.png'),
     require('../assets/images/placeholder-profile-2.png'),
     require('../assets/images/placeholder-profile-3.png'),
   ];
 
-  const privatePhotos = [
+  // Merge actual private photos with placeholders
+  const privatePhotos: (string | number)[] = [
     ...(profile.privatePhotos || []).slice(0, 3),
     ...placeholderImages.slice((profile.privatePhotos || []).length),
   ];
 
-  // Open the share modal when the user requests access
   const onRequestAccess = () => {
-    handleRequestAccess(profile.id); // Handle initial request
-    setIsShareModalVisible(true);    // Show confirmation modal
+    handleRequestAccess(profile.id);
+    setIsShareModalVisible(true);
   };
-  
+
   return (
-    
     <View style={styles.card}>
       {/* Photo Carousel */}
       <View style={styles.photoCarouselContainer}>
@@ -45,82 +59,73 @@ const MatchProfileCard = ({ profile, handleRequestAccess, handleSharePrivateAlbu
         />
       </View>
 
-      {/* Profile Text */}
+      {/* Profile Info */}
       <View style={styles.textContainer}>
-        <Text className='font-obold' style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
-        {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (
-          <Text className='font-oregular' style={styles.livingWith}>
-            {profile.livingWith.join(', ')}
-          </Text>
+        <Text style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
+        {profile.livingWith && profile.livingWith.length > 0 && (
+          <Text style={styles.livingWith}>{profile.livingWith.join(', ')}</Text>
         )}
         <Text style={styles.bio}>{profile.bio}</Text>
+
         {/* Private Album */}
         {profile.privatePhotos && profile.privatePhotos.length > 0 && (
-        <View style={styles.privateAlbumContainer}>
-          <Text style={styles.albumTitle}>Private Album</Text>
-          <View style={styles.blurredImagesContainer}>
-            {privatePhotos.map((photo, index) => (
-              <Image
-                key={index}
-                source={typeof photo === 'string' ? { uri: photo } : photo}
-                style={styles.blurredImage}
-                blurRadius={30}
-              />
-            ))}
+          <View style={styles.privateAlbumContainer}>
+            <Text style={styles.albumTitle}>Private Album</Text>
+            <View style={styles.blurredImagesContainer}>
+              {privatePhotos.map((photo, index) => (
+                <Image
+                  key={index}
+                  source={typeof photo === 'string' ? { uri: photo } : photo}
+                  style={styles.blurredImage}
+                  blurRadius={30}
+                />
+              ))}
+            </View>
+            <TouchableOpacity
+              style={styles.requestAccessButton}
+              onPress={hasAccess ? () => setIsPhotoViewerVisible(true) : onRequestAccess}
+              disabled={hasRequested && !hasAccess}
+            >
+              <Text style={styles.requestAccessText}>
+                {hasAccess ? 'View Album' : hasRequested ? 'Requested' : 'Request Access'}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.requestAccessButton}
-            onPress={hasAccess ? () => setIsPhotoViewerVisible(true) : onRequestAccess}
-            disabled={hasRequested && !hasAccess}
-          >
-            <Text style={styles.requestAccessText}>
-              {hasAccess ? 'View Album' : hasRequested ? 'Requested' : 'Request Access'}
-            </Text>
-          </TouchableOpacity>
-        </View>
         )}
       </View>
-    
 
       {/* Share Confirmation Modal */}
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={isShareModalVisible}
         onRequestClose={() => setIsShareModalVisible(false)}
       >
-        <LinearGradient
-          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.5)']}
-          style={styles.modalOverlay}
-        >
+        <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.5)']} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText} className='font-oregular'>Would you like to share your private album with this user?</Text>
+            <Text style={styles.modalText}>Would you like to share your private album with this user?</Text>
 
-            {/* Share Private Album Button */}
             <TouchableOpacity
               style={styles.shareButton}
               onPress={() => {
                 handleSharePrivateAlbum(profile.id);
-                setIsShareModalVisible(false); // Close modal after sharing
+                setIsShareModalVisible(false);
               }}
             >
               <Text style={styles.shareButtonText}>Share your private album</Text>
             </TouchableOpacity>
 
-            {/* Close Modal Button */}
-            <TouchableOpacity
-              style={styles.closeModalButton}
-              onPress={() => setIsShareModalVisible(false)}
-            >
-              <Ionicons name='close' size={25} color='black' />
+            <TouchableOpacity style={styles.closeModalButton} onPress={() => setIsShareModalVisible(false)}>
+              <Ionicons name="close" size={25} color="black" />
             </TouchableOpacity>
           </View>
         </LinearGradient>
       </Modal>
+
       {/* Photo Viewer Modal */}
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={isPhotoViewerVisible}
         onRequestClose={() => setIsPhotoViewerVisible(false)}
       >
@@ -134,11 +139,8 @@ const MatchProfileCard = ({ profile, handleRequestAccess, handleSharePrivateAlbu
               <Image source={{ uri: photo }} style={styles.fullScreenImage} />
             )}
           />
-          <TouchableOpacity
-            style={styles.closePhotoViewerButton}
-            onPress={() => setIsPhotoViewerVisible(false)}
-          >
-            <Ionicons name='close' size={30} color='white' />
+          <TouchableOpacity style={styles.closePhotoViewerButton} onPress={() => setIsPhotoViewerVisible(false)}>
+            <Ionicons name="close" size={30} color="white" />
           </TouchableOpacity>
         </View>
       </Modal>

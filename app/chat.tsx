@@ -3,13 +3,14 @@ import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity, FlatList, D
 import { useLocalSearchParams, useRouter } from 'expo-router';  // Get params from route and router for navigation
 import { FIREBASE_DB, FIREBASE_AUTH } from '../firebaseConfig';  // Firestore config
 import { doc, updateDoc, onSnapshot, arrayUnion } from 'firebase/firestore';  // Firestore functions
-import { Timestamp } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons'; // Icon for the back button
 import { useNavigation } from '@react-navigation/native';  // Use navigation hook
 import { sendMessage as sendMessageAction, reportUser } from '../firebaseActions'; // Import as sendMessageAction
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faArrowUp } from '@fortawesome/free-solid-svg-icons/faArrowUp';
 import ReportModal from '../components/ReportModal';
+import { Timestamp, MessageItem, RenderMessageProps } from '../constants/types'; 
+
 
 const { width } = Dimensions.get('window');  // Get screen width for layout
 
@@ -59,7 +60,7 @@ const Chat = () => {
     }
   };
 
-  const formatMessageTime = (timestamp) => {
+  const formatMessageTime = (timestamp: Timestamp) => {
     const messageDate = new Date(timestamp.seconds * 1000);
     const today = new Date();
 
@@ -76,7 +77,7 @@ const Chat = () => {
     navigation.goBack();
   };
 
-  const renderMessage = ({ item, index }) => {
+  const renderMessage = ({ item, index }: RenderMessageProps) => {
     const isCurrentUserSender = item.senderID === currentUserId;
 
     return (
@@ -118,7 +119,9 @@ const Chat = () => {
               style={styles.profileImage}
               resizeMode="cover"
             />
-            <Text style={styles.userName} className='font-oregular'>{name || 'User'}</Text>
+            <Text style={[styles.userName, { fontFamily: 'oregular' }]}>
+              {name || 'User'}
+            </Text>
           </TouchableOpacity>
         </View>
         

@@ -98,11 +98,11 @@ const Profile = () => {
           colors={['transparent', 'rgba(0, 0, 0, 0.8)']} // Gradient from transparent to black
           style={styles.gradient}
         />
-        <Text style={styles.userName} className="font-oregular">{name}</Text>
+        <Text style={[styles.userName, {fontFamily: 'oregular'}]}>{name}</Text>
       </View>
 
       <View style={styles.profileTitleContainer}>
-         <Text style={styles.profileTitle} className="font-oregular">Profile</Text>
+         <Text style={[styles.profileTitle, {fontFamily: 'oregular'}]}>Profile</Text>
       </View>
       {/* Button to edit profile */}
       <ProfileButton
@@ -116,7 +116,7 @@ const Profile = () => {
 
       {/* Pause toggle */}
       <View style={styles.pauseToggleContainer}>
-        <Text style={styles.pauseTitle} className='font-oregular'>Pause</Text>
+        <Text style={[styles.pauseTitle, {fontFamily: 'oregular'}]}>Pause</Text>
         <Switch
           value={isPaused}
           onValueChange={togglePause} // Toggle the pause state
@@ -124,13 +124,13 @@ const Profile = () => {
         />
       </View>
       <View style={styles.pauseTextContainer}>
-        <Text style={styles.pauseText} className='font-oregular'>Pausing hides your profile from appearing in the explore feed. You can still view your likes and matches.</Text>
+        <Text style={[styles.pauseText, {fontFamily: 'oregular'}]}>Pausing hides your profile from appearing in the explore feed. You can still view your likes and matches.</Text>
 
       </View>
 
       {/* Account Section */}
       <View style={styles.profileTitleContainer}>
-         <Text style={styles.profileTitle} className="font-oregular">Account</Text>
+         <Text style={[styles.profileTitle, {fontFamily: 'oregular'}]}>Account</Text>
       </View>
       <ProfileButton
         title="Notifications"
@@ -147,7 +147,7 @@ const Profile = () => {
 
       {/* Legal Section */}
       <View style={styles.profileTitleContainer}>
-         <Text style={styles.profileTitle} className="font-oregular">Legal</Text>
+         <Text style={[styles.profileTitle, {fontFamily: 'oregular'}]}>Legal</Text>
       </View>
       <ProfileButton
         title="Privacy Policy"
@@ -164,10 +164,10 @@ const Profile = () => {
           
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText} className='font-oregular'>Log Out</Text>
+          <Text style={[styles.logoutButtonText, {fontFamily: 'oregular'}]}>Log Out</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={() => setIsDeleteModalVisible(true)}>
-          <Text style={styles.logoutButtonText} className='font-oregular'>Delete Account</Text>
+          <Text style={[styles.logoutButtonText, {fontFamily: 'oregular'}]}>Delete Account</Text>
         </TouchableOpacity>
       </View>
       {/* Delete User Modal */}

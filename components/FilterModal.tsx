@@ -1,16 +1,17 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Alert, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import RangeSlider from 'react-native-range-slider-expo';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import { updateUserDocument } from '../firebaseActions';
+import { FilterModalProps } from '../constants/types';
 
 const FIREBASE_AUTH = getAuth();
 
-const FilterModal = ({
+
+const FilterModal: React.FC<FilterModalProps> = ({
   filterModalVisible,
   toggleFilterModal,
   minAge,
@@ -23,7 +24,7 @@ const FilterModal = ({
   setSelectedGenders,
   currentUserId,
 }) => {
-  const toggleGender = async (gender) => {
+  const toggleGender = async (gender: string) => {
     let updatedGenders = selectedGenders.includes(gender)
       ? selectedGenders.filter((g) => g !== gender)
       : [...selectedGenders, gender];
@@ -59,7 +60,7 @@ const FilterModal = ({
         >
           <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle} className='font-oregular'>Age</Text>
+              <Text style={[styles.modalTitle, { fontFamily: 'oregular'}]}>Age</Text>
               <MultiSlider
                 values={[minAge, maxAge]}
                 onValuesChange={(values) => {
@@ -88,11 +89,11 @@ const FilterModal = ({
               />
 
               <View style={styles.ageLabelContainer}>
-                <Text style={styles.ageLabel} className='font-oregular'>{minAge}</Text>
-                <Text style={styles.ageLabel} className='font-oregular'>{maxAge}</Text>
+                <Text style={[styles.ageLabel, { fontFamily: 'oregular'}]}>{minAge}</Text>
+                <Text style={[styles.ageLabel, { fontFamily: 'oregular'}]}>{maxAge}</Text>
               </View>
 
-              <Text style={styles.modalTitle} className='font-oregular'>Distance</Text>
+              <Text style={[styles.modalTitle, { fontFamily: 'oregular'}]}>Distance</Text>
               <Slider
                 style={{ width: '90%', height: 60 }}
                 minimumValue={1}
@@ -104,11 +105,11 @@ const FilterModal = ({
                 thumbTintColor="black"
               />
               <View style={styles.distanceLabelContainer}>
-                <Text style={styles.distanceLabel} className='font-oregular'>Max Distance: {Math.round(maxDistance)} km</Text>
+                <Text style={[styles.distanceLabel, { fontFamily: 'oregular'}]}>Max Distance: {Math.round(maxDistance)} km</Text>
               </View>
 
               <View style={styles.genderContainer}>
-                <Text style={styles.modalTitle} className='font-oregular'>Gender</Text>
+                <Text style={[styles.modalTitle, { fontFamily: 'oregular'}]}>Gender</Text>
                 <View style={styles.checkboxContainer}>
                   {['Male', 'Female', 'Non-Binary'].map((gender) => (
                     <TouchableOpacity
@@ -121,7 +122,7 @@ const FilterModal = ({
                         size={24}
                         color={selectedGenders.includes(gender) ? 'black' : '#ddd'}
                       />
-                      <Text style={styles.checkboxLabel} className='font-oregular'>{gender}</Text>
+                      <Text style={[styles.checkboxLabel, { fontFamily: 'oregular'}]}>{gender}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>

@@ -140,7 +140,7 @@ const PrivateRequests = () => {
     >
       <View style={styles.userInfo}>
         <Image source={{ uri: userDetails[item]?.photos }} style={styles.userPhoto} />
-        <Text style={styles.userText}  className="font-oregular">{userDetails[item]?.name || 'Loading...'}</Text>
+        <Text style={[styles.userText, {fontFamily: 'oregular'}]}>{userDetails[item]?.name || 'Loading...'}</Text>
       </View>
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(item)}>
@@ -158,7 +158,7 @@ const renderAccepted = (item) => (
   <View style={styles.acceptedContainer} key={item}>
     <View style={styles.userInfo}>
       <Image source={{ uri: userDetails[item]?.photos }} style={styles.userPhoto} />
-      <Text style={styles.userText} className="font-oregular">{userDetails[item]?.name || 'Loading...'}</Text>
+      <Text style={[styles.userText, {fontFamily: 'oregular'}]}>{userDetails[item]?.name || 'Loading...'}</Text>
     </View>
     <TouchableOpacity style={styles.removeButton} onPress={() => handleRemove(item)}>
       <Ionicons name="close-outline" size={24} color="black" />
@@ -179,24 +179,24 @@ const renderAccepted = (item) => (
 
       {/* Main content */}
       <ScrollView style={styles.container}>
-        <Text style={styles.title} className="font-oregular">Private Album Requests</Text>
+        <Text style={[ styles.title, {fontFamily: 'oregular'}]}>Private Album Requests</Text>
 
         {/* Display requests */}
-        <Text style={styles.sectionTitle} className="font-oregular">Requests</Text>
+        <Text style={[ styles.sectionTitle, {fontFamily: 'oregular'}]}>Requests</Text>
         {isLoading ? (
-          <Text style={styles.noRequestsText} className="font-oregular">Loading requests...</Text>
+          <Text style={[styles.noRequestsText, {fontFamily: 'oregular'}]}>Loading requests...</Text>
         ) : requests.length > 0 ? (
           requests.map(renderRequest)
         ) : (
-          <Text style={styles.noRequestsText} className="font-oregular">No requests available.</Text>
+          <Text style={[styles.noRequestsText, {fontFamily: 'oregular'}]}>No requests available.</Text>
         )}
 
         {/* Display accepted requests */}
-        <Text style={styles.sectionTitle} className="font-oregular">Accepted Requests</Text>
+        <Text style={[styles.sectionTitle, {fontFamily: 'oregular'}]}>Accepted Requests</Text>
         {accepted.length > 0 ? (
           accepted.map(renderAccepted)
         ) : (
-          <Text style={styles.noRequestsText} className="font-oregular">No accepted requests.</Text>
+          <Text style={[styles.noRequestsText, {fontFamily: 'oregular'}]}>No accepted requests.</Text>
         )}
       </ScrollView>
     </>

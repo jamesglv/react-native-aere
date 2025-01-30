@@ -1,23 +1,23 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, Modal, StyleSheet } from 'react-native';
-import { reportUser, blockUser } from '../firebaseActions';
-import { FIREBASE_AUTH } from '../firebaseConfig';
+import { reportUser } from '../firebaseActions';
+import { ReportModalProps } from '../constants/types';
 
-const handleReport = async ( reportedUserId, goToMatches, matchId = "") => {
-    try {
-      await reportUser({ reportedUserId, matchId });
-      goToMatches();
-    } catch (error) {
-      console.error("Error reporting user:", error);
-      // Handle error (e.g., show an alert)
-    }
-  };
+const handleReport = async (reportedUserId: string, goToMatches: () => void, matchId?: string) => {
+  try {
+    await reportUser({ reportedUserId, matchId });
+    goToMatches();
+  } catch (error) {
+    console.error("Error reporting user:", error);
+    // Handle error (e.g., show an alert)
+  }
+};
 
-const ReportModal = ({ isVisible, onClose, report, close, reportedUserId, matchId }) => {
+const ReportModal: React.FC<ReportModalProps> = ({ isVisible, onClose, report, close, reportedUserId, matchId }) => {
   return (
     <Modal
       visible={isVisible}
-      transparent={true}
+      transparent
       animationType="slide"
       onRequestClose={onClose}
     >
@@ -25,10 +25,12 @@ const ReportModal = ({ isVisible, onClose, report, close, reportedUserId, matchI
         <View style={styles.modalContent}>
           <Image source={require('../assets/images/rose.jpg')} style={styles.image} />
           <Text style={styles.title}>Do you want to report this user?</Text>
+
           <TouchableOpacity style={styles.reportButton} onPress={() => handleReport(reportedUserId, report, matchId)}>
             <Text style={styles.reportText}>Report and Block</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={close} style={styles.close}>
+
+          <TouchableOpacity style={styles.closeButton} onPress={close}>
             <Text style={styles.closeText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -49,6 +51,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
+    alignItems: 'center',
   },
   image: {
     width: 100,
@@ -59,29 +62,33 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     fontFamily: 'Optima',
+    marginBottom: 20,
   },
   reportButton: {
     backgroundColor: 'black',
-    padding: 10,
-    borderRadius: 25,
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    marginTop: 30,
+    borderRadius: 25,
+    marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   reportText: {
     color: '#fff',
     fontSize: 18,
-    margin: 5,
   },
-  close: {
+  closeButton: {
     backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 25,
+    paddingVertical: 10,
     paddingHorizontal: 20,
+    borderRadius: 25,
     marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'black',
   },
   closeText: {
     color: 'black',

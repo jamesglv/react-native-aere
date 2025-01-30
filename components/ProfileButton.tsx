@@ -1,16 +1,16 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { ProfileButtonProps } from '../constants/types';
 
-const ProfileButton = ({ title, onPress }) => {
+const ProfileButton: React.FC<ProfileButtonProps> = ({ title, onPress }) => {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
-      <Text style={styles.buttonText} className="font-oregular">{title}</Text>
-        <Ionicons name="chevron-forward-outline" style={styles.arrowIcon} />
+      <Text style={styles.buttonText}>{title}</Text>
+      <Ionicons name="chevron-forward-outline" size={20} color="#333" />
     </TouchableOpacity>
   );
 };
-
 const styles = StyleSheet.create({
   button: {
     width: '90%',

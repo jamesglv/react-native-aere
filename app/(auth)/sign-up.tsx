@@ -1,30 +1,42 @@
-import { View, Text, ScrollView, Image, Alert, StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Dimensions, Keyboard } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
-import FormField from '../../components/FormField';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  Keyboard,
+} from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { Video } from 'expo-av';
-import CustomButton from '../../components/CustomButton';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { createUserDocument } from '../../firebaseActions';
 
+import FormField from '../../components/FormField';
+import CustomButton from '../../components/CustomButton';
+
 const { height: screenHeight } = Dimensions.get('window');
 
-const SignUp = () => {
+const SignUp: React.FC = () => {
   const router = useRouter();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{ email: string; password: string }>({
     email: '',
-    password: ''
+    password: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const scrollViewRef = useRef(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const scrollViewRef = useRef<ScrollView | null>(null);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     });
-  
+
     return () => {
       keyboardDidShowListener.remove();
     };
@@ -51,17 +63,18 @@ const SignUp = () => {
       // Use the firebaseActions function to create the user document
       await createUserDocument(user.uid, form.email);
 
-      // Navigate to the home screen after successful sign-up
+      // Navigate to the onboarding screen after successful sign-up
       router.replace('/onboarding');
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         // Redirect to the sign-in page if the email is already in use
         Alert.alert('Email is already in use');
         router.replace('/sign-in');
       } else {
         // Handle other errors
+        Alert.alert('Error', error.message);
         console.error(error);
-      }    
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +85,7 @@ const SignUp = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <View className="bg-white h-full">
+      <View style={styles.container}>
         <ScrollView ref={scrollViewRef}>
           <View style={styles.topContainer}>
             <Video
@@ -89,59 +102,53 @@ const SignUp = () => {
             </View>
           </View>
 
-          <View style={styles.contentContainer} className='w-full justify-center px-4'>
-            <Text className='text-2xl text-black text-semibold font-oregular'>
-              Nice to meet you!
-            </Text>
-            <Text style={styles.subheading}>
-              Let's get you signed up.
-            </Text>
+          <View style={styles.contentContainer}>
+            <Text style={styles.welcomeText}>Nice to meet you!</Text>
+            <Text style={styles.subheading}>Let's get you signed up.</Text>
+
             <FormField 
-              title='Email'
+              title="Email"
               value={form.email}
-              handleChangeText={(e) => setForm({...form, email: e})}
-              otherStyles='mt-7'
-              keyboardType='email-address'
-              placeholder={'Email'}
+              handleChangeText={(e) => setForm({ ...form, email: e })}
+              keyboardType="email-address"
+              placeholder="Email"
             />
+
             <FormField 
-              title='Password'
+              title="Password"
               value={form.password}
-              handleChangeText={(e) => setForm({
-                ...form, 
-                password: e
-                })}
-              otherStyles='mt-7'
-              secureTextEntry={!showPassword} 
-              placeholder={'Password'}
+              handleChangeText={(e) => setForm({ ...form, password: e })}
+              secureTextEntry={!showPassword}
+              placeholder="Password"
               showPassword={showPassword}
               setShowPassword={setShowPassword}
             />
+
             <CustomButton 
-              title='Sign Up'
+              title="Sign Up"
               handlePress={submit}
-              containerStyles='mt-7'
               isLoading={isSubmitting}
             />
-            <View className='justify-center pt-5 flex-row gap-2'>
-              <Text className='text-lg text-lightgray font-oregular'>
-                Already have an account?
-              </Text>
-              <Link 
-                href='/sign-in'
-                className='text-lg font-obold text-black'
-              >
+
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Already have an account?</Text>
+              <Link href="/sign-in" style={styles.signupLink}>
                 Sign In
               </Link>
             </View>
-        </View>
-      </ScrollView>
-    </View>
+          </View>
+        </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 };
 
+// Styles
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   topContainer: {
     position: 'relative',
     height: screenHeight * 0.5, // Adjust the height as needed
@@ -164,26 +171,40 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
   },
-  scrollViewContent: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-  },
   contentContainer: {
     flexGrow: 1,
     backgroundColor: 'white',
     paddingTop: 20,
+    paddingHorizontal: 16,
     marginBottom: 20,
   },
-  welcome: {
-    marginBottom: 20,
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   subheading: {
     fontSize: 18,
     color: 'gray',
-    fontFamily: 'Optima',
-    marginTop: 5,
+    textAlign: 'center',
     marginBottom: 20,
-  }
+  },
+  signupContainer: {
+    justifyContent: 'center',
+    flexDirection: 'row',
+    paddingTop: 20,
+  },
+  signupText: {
+    fontSize: 16,
+    color: 'gray',
+  },
+  signupLink: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+    marginLeft: 5,
+  },
 });
 
 export default SignUp;

@@ -74,7 +74,7 @@ const EditProfile = () => {
   }, []);
 
   // Handle photo upload (generalized for both public and private photos)
-  const handleUploadPhoto = async (index, isPrivate = false) => {
+  const handleUploadPhoto = async (index: number, isPrivate = false) => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
@@ -242,26 +242,25 @@ const EditProfile = () => {
             >
             <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-      <Text style={styles.header} className='font-oregular'>Edit Profile</Text>
+      <Text style={[ styles.header, { fontFamily: 'oregular '}]}>Edit Profile</Text>
 
       {/* Name input */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle} className='font-oregular'>Name</Text>
+        <Text style={[ styles.sectionTitle, { fontFamily: 'oregular '}]}>Name</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter your name"
           value={name}
           onChangeText={setName}
-          className='font-oregular'
         />
       </View>
 
       {/* Photo upload grid */}
-      <Text style={styles.sectionTitle} className='font-oregular'>Photos</Text>
+      <Text style={[ styles.sectionTitle, { fontFamily: 'oregular '}]}>Photos</Text>
       {renderPhotoGrid()}
 
       {/* Private photo grid */}
-      <Text style={styles.sectionTitle} className='font-oregular'>Private Album</Text>
+      <Text style={[ styles.sectionTitle, { fontFamily: 'oregular '}]}>Private Album</Text>
       <View style={styles.photoGrid}>
         {Array.from({ length: 6 }).map((_, index) => (
           <View key={index} style={styles.photoBox}>
@@ -285,22 +284,21 @@ const EditProfile = () => {
 
       {/* Bio section */}
       <View style={styles.section}>
-      <Text style={styles.sectionTitle} className='font-oregular'>About Me</Text>
+      <Text style={[ styles.sectionTitle, { fontFamily: 'oregular '}]}>About Me</Text>
 
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={[styles.input, styles.textArea, { fontFamily: 'orgular'}]}
           placeholder="Tell us about yourself"
           value={bio}
           onChangeText={setBio}
           multiline
           numberOfLines={4}
-          className='font-oregular'
         />
       </View>
 
       {/* Gender Selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle} className='font-oregular'>Gender</Text>
+        <Text style={[styles.sectionTitle, { fontFamily: 'oregular' }]}>Gender</Text>
 
         <CheckBox
           title="Male"
@@ -333,7 +331,7 @@ const EditProfile = () => {
 
       {/* Living With Selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle} className='font-oregular'>Living With</Text>
+        <Text style={[styles.sectionTitle, { fontFamily: 'oregular' }]}>Living With</Text>
         {['HSV1-O', 'HSV1-G', 'HSV2-O', 'HSV2-G', 'HPV', 'HIV', 'Hepatitis B', 'Hepatitis C', 'Other'].map((condition) => (
           <CheckBox
             key={condition}
@@ -347,7 +345,9 @@ const EditProfile = () => {
           />
         ))}
       </View>
-      <Text style={styles.sectionTitle} className='font-oregular'>Location</Text>
+      <Text style={[styles.sectionTitle, { fontFamily: 'oregular' }]}>
+        Location
+      </Text>
 
         <ProfileButton
           title="Update Location"
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     padding: 10,
     borderColor: '#ddd',
-    bottomBorderWidth: 1,
+    borderBottomWidth: 1,
     borderRadius: 5,
   },
   photoGrid: {
@@ -468,6 +468,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  addIcon: {
+    color: '#000', // Set the color
+    margin: 10, // Optional margin
   },
 });
 

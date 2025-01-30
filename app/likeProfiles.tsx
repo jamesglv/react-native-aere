@@ -17,9 +17,9 @@ import ProfileCard from '../components/ProfileCard';
 import Loading from '../components/Loading';
 
 
-import placeholder1 from '../assets/images/placeholder-profile-1.png';
-import placeholder2 from '../assets/images/placeholder-profile-2.png';
-import placeholder3 from '../assets/images/placeholder-profile-3.png';
+const placeholder1 = require('../assets/images/placeholder-profile-1.png');
+const placeholder2 = require('../assets/images/placeholder-profile-2.png');
+const placeholder3 = require('../assets/images/placeholder-profile-3.png');
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,7 +31,7 @@ const likeProfiles = () => {
   const navigation = useNavigation();
   const [hasAccess, setHasAccess] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(null); // Add this line
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null); // Add this line
   const [showModal, setShowModal] = useState(false); // Add this line
   const [isMatchModalVisible, setIsMatchModalVisible] = useState(false);
 
@@ -77,7 +77,7 @@ const likeProfiles = () => {
       await handleMatchAction(currentUserId, userId);
       //router.back();
     } catch (error) {
-      Alert.alert("Error", error.message);
+      //Alert.alert("Error", error.message);
     }
   };
 
@@ -86,7 +86,7 @@ const likeProfiles = () => {
       await declineUserAction(currentUserId, userId);
       router.back();
     } catch (error) {
-      Alert.alert("Error", error.message);
+      //Alert.alert("Error", error.message);
     }
   };
 
@@ -108,7 +108,11 @@ const likeProfiles = () => {
       await handleRequestAccessAction(currentUserId, userId);
       Alert.alert('Request Sent', 'Your access request has been sent.');
       setHasRequested(true);
-      setSelectedProfile(userId); // Set the selected profile
+      if (typeof userId === 'string') {
+        setSelectedProfile(userId); // Set the selected profile
+      } else {
+        console.error('userId is not a string:', userId);
+      }
       setShowModal(true); // Show the modal
     } catch (error) {
       console.error('Error requesting access:', error);
@@ -155,7 +159,7 @@ const likeProfiles = () => {
             showsHorizontalScrollIndicator={false}
             pagingEnabled
             //refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            contentContainerStyle={styles.profilesCarousel}
+            //contentContainerStyle={styles.profilesCarousel}
             bounces={false}
           />
         
@@ -274,6 +278,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2, 
     elevation: 5 
   },
+  scrollViewContent: {},
 });
 
 export default likeProfiles;
