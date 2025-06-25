@@ -17,7 +17,8 @@
       "package": "com.harwooddigital.AERE",
       "config": {
         "googleMapsApiKey": "AIzaSyDG7t8dtS1t0xBDpCyzjI11dusFpmVOvJI"
-      }
+      },
+      "bundleIdentifier": "com.harwooddigital.AERE"
     },
     "android": {
       "adaptiveIcon": {
