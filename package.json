@@ -66,11 +66,11 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.7.0",
     "rn-range-slider": "^2.2.2",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "tailwindcss": "^3.2.7"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "tailwindcss": "^3.3.2"
+    "@babel/core": "^7.20.0"
   },
   "private": true
 }

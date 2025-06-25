@@ -50,11 +50,6 @@ const ProfileCard = ({ profile, handleLike, handleDecline, handleRequestAccess, 
       {/* Profile Text */}
       <View style={styles.textContainer}>
         <Text className='font-obold' style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
-        {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (
-          <Text className='font-oregular' style={styles.livingWith}>
-            {profile.livingWith.join(', ')}
-          </Text>
-        )}
         <View style={styles.divider} />
         <Text style={styles.aboutMe}>About Me</Text>
 
@@ -170,7 +165,6 @@ const styles = StyleSheet.create({
   actionButtons: { position: 'absolute', right: 20, top: height / 2 - 600, alignItems: 'center', height: 130, justifyContent: 'space-between' },
   likeButton: { backgroundColor: '#fff', padding: 23, marginBottom: 25, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
   declineButton: { backgroundColor: '#fff', padding: 15, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 5 },
-  livingWith: { fontSize: 18, paddingBottom: 10},
   reportButton: {
     backgroundColor: '#fff',
     padding: 5,

@@ -41,7 +41,7 @@ exports.saveUserProfile = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to save profile data.');
   }
   const userId = context.auth.uid;
-  const { name, birthdate, age, gender, bio, photos, location, interested, livingWith, paused } = data;
+  const { name, birthdate, age, gender, bio, photos, location, interested, paused } = data;
 
   try {
     await db.collection('users').doc(userId).set({
@@ -53,7 +53,6 @@ exports.saveUserProfile = functions.https.onCall(async (data, context) => {
       photos,
       location,
       interested,
-      livingWith,
       paused,
       onboardingCompleted: true
     }, { merge: true });

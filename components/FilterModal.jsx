@@ -110,7 +110,7 @@ const FilterModal = ({
               <View style={styles.genderContainer}>
                 <Text style={styles.modalTitle} className='font-oregular'>Gender</Text>
                 <View style={styles.checkboxContainer}>
-                  {['Male', 'Female', 'Non-Binary'].map((gender) => (
+                  {['Male', 'Female'].map((gender) => (
                     <TouchableOpacity
                       key={gender}
                       style={styles.checkbox}

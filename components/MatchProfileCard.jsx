@@ -48,11 +48,6 @@ const MatchProfileCard = ({ profile, handleRequestAccess, handleSharePrivateAlbu
       {/* Profile Text */}
       <View style={styles.textContainer}>
         <Text className='font-obold' style={[styles.name, { letterSpacing: 1.5 }]}>{profile.name}, {profile.age}</Text>
-        {Array.isArray(profile.livingWith) && profile.livingWith.length > 0 && (
-          <Text className='font-oregular' style={styles.livingWith}>
-            {profile.livingWith.join(', ')}
-          </Text>
-        )}
         <Text style={styles.bio}>{profile.bio}</Text>
         {/* Private Album */}
         {profile.privatePhotos && profile.privatePhotos.length > 0 && (
@@ -160,7 +155,6 @@ const styles = StyleSheet.create({
   blurredImage: { width: 100, height: 100, borderRadius: 10 },
   requestAccessButton: { backgroundColor: '#6a6a6a', paddingVertical: 15, borderRadius: 8, alignItems: 'center' },
   requestAccessText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  livingWith: { fontSize: 18, paddingBottom: 10},
 
   // Modal styles
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },

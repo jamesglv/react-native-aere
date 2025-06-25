@@ -39,7 +39,7 @@ const userProfiles = () => {
         return;
       }
       try {
-        const userData = await fetchTargetUserData(userId, ['privateAccepted', 'privateRequests', 'privatePhotos', 'photos', 'name', 'age', 'bio', 'livingWith']);
+        const userData = await fetchTargetUserData(userId, ['privateAccepted', 'privateRequests', 'privatePhotos', 'photos', 'name', 'age', 'bio']);
         setUser(userData);
 
         if (userData.privateAccepted && userData.privateAccepted.includes(currentUserId)) {
@@ -143,11 +143,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 10,
-  },
-  livingWith: { fontSize: 18, paddingBottom: 10 },
-  bio: {
-    fontSize: 16,
-    color: '#1c1c1e',
   },
   errorText: {
     fontSize: 18,

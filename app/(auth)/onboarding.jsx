@@ -20,10 +20,9 @@ const onboardingPages = [
   { id: '2', title: 'Enter Your Birthdate' },
   { id: '3', title: 'Select Your Gender' },
   { id: '4', title: 'Who are you looking for?' },  // New page for selecting interested gender
-  { id: '5', title: 'What are you living with?' },
-  { id: '6', title: 'Share something about you' },
-  { id: '7', title: 'Upload your public album' },
-  { id: '8', title: "Finally, let's set your location" },
+  { id: '5', title: 'Share something about you' },
+  { id: '6', title: 'Upload your public album' },
+  { id: '7', title: "Finally, let's set your location" },
 ];
 
 const Onboarding = () => {
@@ -37,7 +36,6 @@ const Onboarding = () => {
   const [month, setMonth] = useState('1');  // Default to January
   const [year, setYear] = useState('2000');  // Default to the year 2000
   const [gender, setGender] = useState('');
-  const [livingWith, setLivingWith] = useState([]);
   const [bio, setBio] = useState('');
   const [photos, setPhotos] = useState([]);  // Array to store selected photos (max 6)
   const [isUploading, setIsUploading] = useState(false);  // Track upload state
@@ -112,19 +110,15 @@ const Onboarding = () => {
       Alert.alert('Error', 'Please select at least one option for who you are interested in');
       return;
     }
-    if (currentPage === 4 && livingWith.length === 0) {
-      Alert.alert('Error', 'Please select what you are living with');
-      return;
-    }
-    if (currentPage === 5 && !bio.trim()) {
+    if (currentPage === 4 && !bio.trim()) {
       Alert.alert('Error', 'Please enter your bio');
       return;
     }
-    if (currentPage === 6 && photos.length === 0) {
+    if (currentPage === 5 && photos.length === 0) {
       Alert.alert('Error', 'Please upload at least one photo');
       return;
     }
-    if (currentPage === 7 && !location) {
+    if (currentPage === 6 && !location) {
       Alert.alert('Error', 'Please set your location');
       return;
     }
@@ -153,17 +147,7 @@ const Onboarding = () => {
     console.log('interested', interested);
   };
 
-  const toggleLivingWith = (option) => {
-    setLivingWith((prevState) => {
-      if (prevState.includes(option)) {
-        return prevState.filter((item) => item !== option);
-      } else {
-        return [...prevState, option];
-      }
-    });
-  };
-
-  // Function to pick multiple photos (up to 6)
+  // Function to pick multiple photos
   const pickPhotos = async () => {
     console.log('Photo picker triggered');
 
@@ -188,14 +172,14 @@ const Onboarding = () => {
         return;
       }
 
-      setPhotos(prevPhotos => [...prevPhotos, ...newPhotos]);  // Add new photos to the state
+      setPhotos(prevPhotos => [...prevPhotos, ...newPhotos]); 
     }
   };
 
   // Delete photo from the selected list
   const deletePhoto = (index) => {
     const updatedPhotos = [...photos];
-    updatedPhotos.splice(index, 1);  // Remove the photo at the given index
+    updatedPhotos.splice(index, 1);  
     setPhotos(updatedPhotos);
   };
 
@@ -204,25 +188,21 @@ const Onboarding = () => {
     try {
       console.log("Starting upload for URI:", uri);
   
-      // Generate a unique, URL-safe filename using UUID
-      const uniqueId = uuid.v4();  // Generate a UUID
-      const fileName = `photo-${uniqueId}`;  // Use UUID to ensure uniqueness
+      const uniqueId = uuid.v4(); 
+      const fileName = `photo-${uniqueId}`; 
   
       const response = await fetch(uri);
-      const blob = await response.blob();  // Convert to blob
+      const blob = await response.blob(); 
       console.log("Blob created successfully");
   
-      // Prepare the Firebase Storage reference
       const photoRef = ref(FIREBASE_STORAGE, `users/${userId}/${fileName}`);
   
-      // Upload the blob to Firebase Storage
       await uploadBytes(photoRef, blob);
   
-      // Retrieve the download URL
       const downloadUrl = await getDownloadURL(photoRef);
       console.log("Download URL:", downloadUrl);
   
-      return downloadUrl;  // Return the URL-safe download URL
+      return downloadUrl; 
     } catch (error) {
       console.error("Error uploading photo:", error);
       throw error;
@@ -259,7 +239,6 @@ const Onboarding = () => {
         photos: photoUrls,
         location,
         interested: interested,
-        livingWith,
         onboardingCompleted: true,
         paused: false,
       });
@@ -270,34 +249,18 @@ const Onboarding = () => {
     }
   };
   
-  // Helper to convert image to base64
+
   const convertImageToBase64 = async (uri) => {
     const response = await fetch(uri);
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]); // Get the base64 string
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
   };
 
-  const LivingWithCheckbox = ({ livingWith, toggleLivingWith, styles, title }) => (
-    <View style={styles.checkboxContainer}>
-      <TouchableOpacity
-        key={livingWith}
-        style={styles.checkbox}
-        onPress={() => toggleLivingWith(title)}
-      >
-        <Ionicons
-          name={livingWith.includes(title) ? 'checkmark-circle' : 'ellipse-outline'}
-          size={24}
-          color={livingWith.includes(title) ? 'white' : '#ddd'}
-        />
-        <Text style={styles.checkboxLabel} className='font-oregular'>{title}</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   // Render the content for each page
   const renderPage = ({ item }) => {
@@ -388,20 +351,7 @@ const Onboarding = () => {
                 <Text style={styles.checkboxLabel} className='font-oregular'>Female</Text>
               </TouchableOpacity>
           </View>
-          <View style={styles.checkboxContainer}>
-            <TouchableOpacity
-              key={gender}
-              style={styles.checkbox}
-              onPress={() => setGender('Non-Binary')}
-            >
-              <Ionicons
-                name={gender.includes('Non-Binary') ? 'checkmark-circle' : 'ellipse-outline'}
-                size={24}
-                color={gender.includes('Non-Binary') ? 'white' : '#ddd'}
-              />
-              <Text style={styles.checkboxLabel} className='font-oregular'>Non-Binary</Text>
-            </TouchableOpacity>
-          </View>
+
           </View>
         </View>
       );
@@ -436,85 +386,11 @@ const Onboarding = () => {
               <Text style={styles.checkboxLabel} className='font-oregular'>Women</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.checkboxContainer}>
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() => toggleInterest('Non-Binary')}
-            >
-              <Ionicons
-                name={interested.includes('Non-Binary') ? 'checkmark-circle' : 'ellipse-outline'}
-                size={24}
-                color={interested.includes('Non-Binary') ? 'white' : '#ddd'}
-              />
-              <Text style={styles.checkboxLabel} className='font-oregular'>Non-Binary</Text>
-            </TouchableOpacity>
-          </View>
+        
           </View>
         </View>
       );
     } else if (item.id === '5') {
-      return (
-        <View style={[styles.page, { width }]}>
-          <Text style={styles.title}>{item.title}</Text>
-          <View style={styles.livingWithContainer}>
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="HSV1-O"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="HSV1-G"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="HSV2-O"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="HSV2-G"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="HPV"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="HIV"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="Hepatitis B"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="Hepatitis C"
-            />
-            <LivingWithCheckbox
-              livingWith={livingWith}
-              toggleLivingWith={toggleLivingWith}
-              styles={styles}
-              title="Other"
-            />
-          </View>
-        </View>
-      );
-    } else if (item.id === '6') {
       return (
         <View style={[styles.page, { width }]}>
           <Text style={styles.title}>{item.title}</Text>
@@ -529,7 +405,7 @@ const Onboarding = () => {
           />
         </View>
       );
-    } else if (item.id === '7') {
+    } else if (item.id === '6') {
       return (
         <View style={[styles.page, { width }, {marginTop: '60%'}]}>
           <Text style={styles.title}>{item.title}</Text>
@@ -555,13 +431,13 @@ const Onboarding = () => {
           </ScrollView>
         </View>
       );
-    } else if (item.id === '8') {
+    } else if (item.id === '7') {
         return (
             <View style={[styles.page, { width }]}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.subtitle}>Drag the map to set your location</Text>
               <MapView
-                style={{ width: '100%', height: 300 }} //styles.map
+                style={{ width: '100%', height: 300 }} 
                 region={region}
                 onRegionChangeComplete={setRegion}
               >
@@ -695,18 +571,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   genderOption: {
-    fontSize: 18,
-    color: '#fff',
-    marginVertical: 10,  // Add spacing between gender options
-  },
-  livingWithContainer: {
-    flexDirection: 'column',  // Stack vertically
-    justifyContent: 'space-around',
-    alignItems: 'flex-start',
-    width: '80%',
-    marginTop: 20,
-  },
-  livingWithOption: {
     fontSize: 18,
     color: '#fff',
     marginVertical: 10,  // Add spacing between gender options

@@ -33,7 +33,6 @@ const EditProfile = () => {
   const [uploadingIndex, setUploadingIndex] = useState(false);
 
   const [gender, setGender] = useState('');
-  const [livingWith, setLivingWith] = useState([]);
 
   // Remove default header bar by setting options in useLayoutEffect
   useLayoutEffect(() => {
@@ -47,7 +46,7 @@ const EditProfile = () => {
   const fetchProfileData = async () => {
     try {
       const userData = await fetchUserData([
-        'name', 'bio', 'photos', 'privatePhotos', 'gender', 'livingWith'
+        'name', 'bio', 'photos', 'privatePhotos', 'gender'
       ]);
 
       // Ensure userData exists and set fields if present
@@ -57,7 +56,6 @@ const EditProfile = () => {
         setPhotos(userData.photos || []);
         setPrivatePhotos(userData.privatePhotos || []);
         setGender(userData.gender || '');
-        setLivingWith(userData.livingWith || []);
       } else {
         console.warn("No user data returned from Firebase");
       }
@@ -161,15 +159,6 @@ const EditProfile = () => {
     updateUserDocument({ gender: selectedGender }); // Update Firestore
   };
 
-  // Handle Living With selection change
-  const handleLivingWithChange = (condition) => {
-    const updatedLivingWith = livingWith.includes(condition)
-      ? livingWith.filter(item => item !== condition)
-      : [...livingWith, condition];
-    setLivingWith(updatedLivingWith);
-    updateUserDocument({ livingWith: updatedLivingWith }); // Update Firestore
-  };
-
   // Save profile
     const handleSaveProfile = async () => {
         setIsSaving(true);
@@ -181,7 +170,6 @@ const EditProfile = () => {
             photos,
             privatePhotos,
             gender,
-            livingWith,
         });
         } catch (error) {
         console.error('Error updating profile:', error);
@@ -320,33 +308,9 @@ const EditProfile = () => {
           checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
           uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
         />
-        <CheckBox
-          title="Non-Binary"
-          checked={gender === 'Non-Binary'}
-          onPress={() => handleGenderChange('Non-Binary')}
-          containerStyle={styles.checkBoxContainer} 
-          textStyle={styles.fontOregular}
-          checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
-          uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
-        />
+
       </View>
 
-      {/* Living With Selection */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle} className='font-oregular'>Living With</Text>
-        {['HSV1-O', 'HSV1-G', 'HSV2-O', 'HSV2-G', 'HPV', 'HIV', 'Hepatitis B', 'Hepatitis C', 'Other'].map((condition) => (
-          <CheckBox
-            key={condition}
-            title={condition}
-            checked={livingWith.includes(condition)}
-            onPress={() => handleLivingWithChange(condition)}
-            containerStyle={styles.checkBoxContainer}
-            textStyle={styles.fontOregular}
-            checkedIcon={<Ionicons name="checkmark-circle" size={24} color="black" />}
-          uncheckedIcon={<Ionicons name="ellipse-outline" size={24} color="#ddd" />}
-          />
-        ))}
-      </View>
       <Text style={styles.sectionTitle} className='font-oregular'>Location</Text>
 
         <ProfileButton
