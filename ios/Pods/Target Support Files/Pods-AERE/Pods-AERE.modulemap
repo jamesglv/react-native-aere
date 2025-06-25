@@ -1,0 +1,6 @@
+module Pods_AERE {
+  umbrella header "Pods-AERE-umbrella.h"
+
+  export *
+  module * { export * }
+}
