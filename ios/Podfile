@@ -28,19 +28,17 @@ self.define_singleton_method(use_autolinking_method_symbol) do |*args|
   end
 end
 
+use_modular_headers!
 platform :ios, podfile_properties['ios.deploymentTarget'] || '13.4'
 install! 'cocoapods',
   :deterministic_uuids => false
 
 prepare_react_native_project!
-use_modular_headers! 
-
 
 target 'AERE' do
   use_expo_modules!
 # @generated begin react-native-maps - expo prebuild (DO NOT MODIFY) sync-e9cc66c360abe50bc66d89fffb3c55b034d7d369
   pod 'react-native-google-maps', path: File.dirname(`node --print "require.resolve('react-native-maps/package.json')"`)
-  pod 'FirebaseCoreInternal', :modular_headers => true
 # @generated end react-native-maps
   config = use_native_modules!
 
@@ -60,8 +58,26 @@ target 'AERE' do
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
-      :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
+     # :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
+
+    # Fix for conflicting DEFINES_MODULE values
+    installer.pods_project.targets.each do |target|
+      if target.name.start_with?("ReactCommon") || target.name == "expo-dev-menu"
+        target.build_configurations.each do |config|
+          config.build_settings["DEFINES_MODULE"] = "YES"
+        end
+      end
+    end
+
+     # Enforce minimum deployment target for all pods
+     installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 13.4
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4'
+        end
+      end
+    end
 
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
